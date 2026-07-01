@@ -473,6 +473,7 @@ function render() {
 let teamEdit = null;
 let addOpen = null;   // 'my' | 'opp' | null — which column's add-form is open
 let missArm = false;   // when true, the next shot tap records a miss, then disarms
+let flashKey = null;   // key of the grid button to flash blue on the next render, or null
 
 // --- Setup screen state (draft, lives only while on setup) ---
 let setupDraft = null;
@@ -1004,15 +1005,19 @@ function renderControls(g) {
   const recent = g.log.slice(-10).reverse()
     .map((e)=>`<div class="ev">${e.clockText} ${periodLabel(e.period,g.config.numHalves)} — ${esc(e.detail)}</div>`)
     .join('');
+  const flashClass = (key) => {
+    if (flashKey === key) { flashKey = null; return ' flash'; }
+    return '';
+  };
   return `
     <div class="grid">
-      <button data-stat="2pt">2PT</button>
-      <button data-stat="3pt">3PT</button>
-      <button data-stat="ft">FT</button>
-      <button id="btn-miss" class="${missArm?'armed':''}">MISS</button>
-      ${['oreb','dreb','stl','blk','ast','to'].map((s)=>`<button data-stat="${s}">${s==='to'?'TOVR':s.toUpperCase()}</button>`).join('')}
-      <button data-stat="foul">FOUL</button>
-      <button id="btn-undo" class="undo">UNDO</button>
+      <button data-stat="2pt" class="${flashClass('2pt')}">2PT</button>
+      <button data-stat="3pt" class="${flashClass('3pt')}">3PT</button>
+      <button data-stat="ft" class="${flashClass('ft')}">FT</button>
+      <button id="btn-miss" class="${missArm?'armed':''}${flashClass('btn-miss')}">MISS</button>
+      ${['oreb','dreb','stl','blk','ast','to'].map((s)=>`<button data-stat="${s}" class="${flashClass(s)}">${s==='to'?'TOVR':s.toUpperCase()}</button>`).join('')}
+      <button data-stat="foul" class="${flashClass('foul')}">FOUL</button>
+      <button id="btn-undo" class="undo${flashClass('btn-undo')}">UNDO</button>
     </div>
     <div class="recent">${recent}</div>
   `;
@@ -1063,8 +1068,8 @@ function wireGame() {
   $('clk-toggle') && ($('clk-toggle').onclick = () => commit((game,now)=>toggleClock(game,now)));
   el_each('[data-clk]', (b) => attachClockPress(b));
 
-  $('btn-miss') && ($('btn-miss').onclick = () => { missArm = !missArm; render(); });
-  $('btn-undo') && ($('btn-undo').onclick = () => commit((game)=>undo(game)));
+  $('btn-miss') && ($('btn-miss').onclick = () => { flashKey = 'btn-miss'; missArm = !missArm; render(); });
+  $('btn-undo') && ($('btn-undo').onclick = () => { flashKey = 'btn-undo'; commit((game)=>undo(game)); });
   $('btn-endhalf') && ($('btn-endhalf').onclick = () => commit((game,now)=>endHalf(game,now)));
   $('btn-endgame') && ($('btn-endgame').onclick = () => {
     commit((game,now)=>endGame(game,now));
@@ -1117,10 +1122,13 @@ function attachPressHandlers(btn, stat) {
   btn.addEventListener('contextmenu', (e) => e.preventDefault());   // suppress long-press browser menu
   btn.onclick = () => {
     if (longFired) { longFired = false; return; }
-    if (SHOT_INFO[stat] && missArm && selectedTeam(state.game)) {
+    const hasTeam = !!selectedTeam(state.game);
+    if (SHOT_INFO[stat] && missArm && hasTeam) {
       missArm = false;
+      flashKey = stat;
       recordSelectedStat(stat, { made:false });
     } else {
+      if (hasTeam) flashKey = stat;
       recordSelectedStat(stat);
     }
   };
