@@ -127,7 +127,7 @@ function playerTag(p) {
   return p.name && !p.name.startsWith('#') ? `#${p.num} ${p.name}` : `#${p.num}`;
 }
 
-function recordStat(game, { team, playerId, stat, modifier, made = true }, nowMs) {
+function recordStat(game, { team, playerId, stat, modifier = undefined, made = true }, nowMs) {
   if (!STAT_TYPES.includes(stat)) return game;
 
   let g = clone(game);
@@ -1031,7 +1031,6 @@ function selectedTeam(g) {
 }
 
 function wireGame() {
-  const g = state.game;
   const $ = (id) => document.getElementById(id);
 
   el_each('[data-pl]', (b) => attachPlayerPress(b));
