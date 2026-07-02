@@ -7,10 +7,8 @@ test('app.js is require-able and exports VERSION', () => {
   assert.strictEqual(typeof app.VERSION, 'string');
 });
 
-const {
-  clone, emptyMyStats, periodLabel, bonusState,
-  fmtClock, parseClock, fmtShot, newGame,
-} = app;
+const { clone, emptyMyStats, periodLabel, bonusState, fmtClock, parseClock, fmtShot, newGame } =
+  app;
 
 test('clone is a deep copy', () => {
   const a = { x: { y: 1 } };
@@ -21,8 +19,23 @@ test('clone is a deep copy', () => {
 
 test('empty stat shapes', () => {
   assert.deepStrictEqual(emptyMyStats(), {
-    pts:0, fgm:0, fga:0, tpm:0, tpa:0, ftm:0, fta:0, oreb:0, dreb:0, stl:0, blk:0, ast:0, to:0, pf:0,
-    onCourt:false, inClock:null, courtSecs:0,
+    pts: 0,
+    fgm: 0,
+    fga: 0,
+    tpm: 0,
+    tpa: 0,
+    ftm: 0,
+    fta: 0,
+    oreb: 0,
+    dreb: 0,
+    stl: 0,
+    blk: 0,
+    ast: 0,
+    to: 0,
+    pf: 0,
+    onCourt: false,
+    inClock: null,
+    courtSecs: 0,
   });
 });
 
@@ -49,25 +62,25 @@ test('clock formatting', () => {
 });
 
 test('parseClock rejects seconds out of range', () => {
-  assert.strictEqual(parseClock('1:60'), null);  // seconds must be 0–59
+  assert.strictEqual(parseClock('1:60'), null); // seconds must be 0–59
 });
 
 test('newGame builds initial state keyed by identity', () => {
   const g = newGame({
-    config: { halfLengthMin:18, numHalves:2, otLengthMin:4, myTeamSide:'home' },
-    myTeam: { id:'t1', name:'Mine', players:[{id:'p1', num:5, name:'Smith'}] },
-    oppTeam: { name:'Them', players:[{id:'o1', num:9, name:''}] },
+    config: { halfLengthMin: 18, numHalves: 2, otLengthMin: 4, myTeamSide: 'home' },
+    myTeam: { id: 't1', name: 'Mine', players: [{ id: 'p1', num: 5, name: 'Smith' }] },
+    oppTeam: { name: 'Them', players: [{ id: 'o1', num: 9, name: '' }] },
   });
   assert.strictEqual(g.screen, 'game');
   assert.strictEqual(g.period, 1);
-  assert.strictEqual(g.clock.remainingSec, 18*60);
+  assert.strictEqual(g.clock.remainingSec, 18 * 60);
   assert.strictEqual(g.clock.running, false);
-  assert.deepStrictEqual(g.score, { my:0, opp:0 });
+  assert.deepStrictEqual(g.score, { my: 0, opp: 0 });
   assert.deepStrictEqual(g.periodScores, []);
   assert.strictEqual(g.possession, 'my');
-  assert.strictEqual(g.myTeam.players[0].pts, 0);   // my players carry full stats
+  assert.strictEqual(g.myTeam.players[0].pts, 0); // my players carry full stats
   assert.strictEqual(g.myTeam.players[0].oreb, 0);
-  assert.strictEqual(g.oppTeam.players[0].pts, 0);   // both teams carry the full stat set
+  assert.strictEqual(g.oppTeam.players[0].pts, 0); // both teams carry the full stat set
   assert.strictEqual('dreb' in g.oppTeam.players[0], true);
 });
 
@@ -75,31 +88,34 @@ const { clockRemaining, startClock, stopClock, toggleClock, adjustClock } = app;
 
 function freshGame() {
   return newGame({
-    config:{ halfLengthMin:18, numHalves:2, otLengthMin:4, myTeamSide:'home' },
-    myTeam:{ id:'t1', name:'Mine', players:[{id:'p1',num:5,name:'Smith'}] },
-    oppTeam:{ name:'Them', players:[{id:'o1',num:9,name:''}] },
+    config: { halfLengthMin: 18, numHalves: 2, otLengthMin: 4, myTeamSide: 'home' },
+    myTeam: { id: 't1', name: 'Mine', players: [{ id: 'p1', num: 5, name: 'Smith' }] },
+    oppTeam: { name: 'Them', players: [{ id: 'o1', num: 9, name: '' }] },
   });
 }
 
 test('clockRemaining counts down by real elapsed time', () => {
   const clock = { remainingSec: 100, running: true, startedAt: 1000 };
   assert.strictEqual(clockRemaining(clock, 1000), 100);
-  assert.strictEqual(clockRemaining(clock, 6000), 95);   // 5s elapsed
-  assert.strictEqual(clockRemaining(clock, 999000), 0);  // never negative
+  assert.strictEqual(clockRemaining(clock, 6000), 95); // 5s elapsed
+  assert.strictEqual(clockRemaining(clock, 999000), 0); // never negative
 });
 
 test('clockRemaining returns baked value when stopped', () => {
-  assert.strictEqual(clockRemaining({ remainingSec: 42, running:false, startedAt:null }, 9e9), 42);
+  assert.strictEqual(
+    clockRemaining({ remainingSec: 42, running: false, startedAt: null }, 9e9),
+    42,
+  );
 });
 
 test('start then stop bakes elapsed time', () => {
   let g = freshGame();
   g = startClock(g, 1000);
   assert.strictEqual(g.clock.running, true);
-  g = stopClock(g, 4000);  // 3s later
+  g = stopClock(g, 4000); // 3s later
   assert.strictEqual(g.clock.running, false);
   assert.strictEqual(g.clock.startedAt, null);
-  assert.strictEqual(g.clock.remainingSec, 18*60 - 3);
+  assert.strictEqual(g.clock.remainingSec, 18 * 60 - 3);
 });
 
 test('toggleClock flips running', () => {
@@ -111,27 +127,27 @@ test('toggleClock flips running', () => {
 });
 
 test('adjustClock nudges remaining seconds and clamps at zero (stopped)', () => {
-  let g = freshGame();                          // stopped, remaining = 18*60
+  let g = freshGame(); // stopped, remaining = 18*60
   g = adjustClock(g, 1, 1000);
-  assert.strictEqual(g.clock.remainingSec, 18*60 + 1);
+  assert.strictEqual(g.clock.remainingSec, 18 * 60 + 1);
   assert.strictEqual(g.clock.running, false);
-  g = adjustClock(g, -(18*60 + 5), 2000);       // overshoot downward
-  assert.strictEqual(g.clock.remainingSec, 0);  // clamped at zero
+  g = adjustClock(g, -(18 * 60 + 5), 2000); // overshoot downward
+  assert.strictEqual(g.clock.remainingSec, 0); // clamped at zero
 });
 
 test('adjustClock keeps a running clock running and rebases startedAt', () => {
-  let g = startClock(freshGame(), 1000);        // running, startedAt=1000
-  g = adjustClock(g, 5, 3000);                  // 2s elapsed → 18*60-2, then +5 = 18*60+3
+  let g = startClock(freshGame(), 1000); // running, startedAt=1000
+  g = adjustClock(g, 5, 3000); // 2s elapsed → 18*60-2, then +5 = 18*60+3
   assert.strictEqual(g.clock.running, true);
-  assert.strictEqual(g.clock.startedAt, 3000);  // rebased to now
-  assert.strictEqual(g.clock.remainingSec, 18*60 + 3);
+  assert.strictEqual(g.clock.startedAt, 3000); // rebased to now
+  assert.strictEqual(g.clock.remainingSec, 18 * 60 + 3);
 });
 
 const { recordStat } = app;
 
 test('my 2pt make adds points and field goal make/attempt', () => {
   let g = freshGame();
-  g = recordStat(g, { team:'my', playerId:'p1', stat:'2pt' }, 1000);
+  g = recordStat(g, { team: 'my', playerId: 'p1', stat: '2pt' }, 1000);
   const p = g.myTeam.players[0];
   assert.strictEqual(p.pts, 2);
   assert.strictEqual(p.fgm, 1);
@@ -142,7 +158,7 @@ test('my 2pt make adds points and field goal make/attempt', () => {
 
 test('a shot with made:false records an attempt only (a miss)', () => {
   let g = freshGame();
-  g = recordStat(g, { team:'my', playerId:'p1', stat:'3pt', made:false }, 1000);
+  g = recordStat(g, { team: 'my', playerId: 'p1', stat: '3pt', made: false }, 1000);
   const p = g.myTeam.players[0];
   assert.strictEqual(p.tpm, 0);
   assert.strictEqual(p.tpa, 1);
@@ -153,7 +169,7 @@ test('a shot with made:false records an attempt only (a miss)', () => {
 
 test('foul increments player pf and team fouls', () => {
   let g = freshGame();
-  g = recordStat(g, { team:'my', playerId:'p1', stat:'foul', modifier:'Shooting' }, 1000);
+  g = recordStat(g, { team: 'my', playerId: 'p1', stat: 'foul', modifier: 'Shooting' }, 1000);
   assert.strictEqual(g.myTeam.players[0].pf, 1);
   assert.strictEqual(g.teamFouls.my, 1);
   assert.match(g.log[0].detail, /foul \(Shooting\)/);
@@ -161,8 +177,8 @@ test('foul increments player pf and team fouls', () => {
 
 test('offensive and defensive rebounds record separately', () => {
   let g = freshGame();
-  g = recordStat(g, { team:'my', playerId:'p1', stat:'oreb' }, 1000);
-  g = recordStat(g, { team:'my', playerId:'p1', stat:'dreb' }, 2000);
+  g = recordStat(g, { team: 'my', playerId: 'p1', stat: 'oreb' }, 1000);
+  g = recordStat(g, { team: 'my', playerId: 'p1', stat: 'dreb' }, 2000);
   const p = g.myTeam.players[0];
   assert.strictEqual(p.oreb, 1);
   assert.strictEqual(p.dreb, 1);
@@ -170,23 +186,23 @@ test('offensive and defensive rebounds record separately', () => {
 
 test('opponent records the full stat set too', () => {
   let g = freshGame();
-  g = recordStat(g, { team:'opp', playerId:'o1', stat:'3pt' }, 1000);
+  g = recordStat(g, { team: 'opp', playerId: 'o1', stat: '3pt' }, 1000);
   assert.strictEqual(g.oppTeam.players[0].pts, 3);
   assert.strictEqual(g.score.opp, 3);
-  g = recordStat(g, { team:'opp', playerId:'o1', stat:'blk' }, 2000);  // now allowed
+  g = recordStat(g, { team: 'opp', playerId: 'o1', stat: 'blk' }, 2000); // now allowed
   assert.strictEqual(g.oppTeam.players[0].blk, 1);
 });
 
 test('opponent shot with made:false is a miss', () => {
   let g = freshGame();
-  g = recordStat(g, { team:'opp', playerId:'o1', stat:'2pt', made:false }, 1000);
-  assert.strictEqual(g.score.opp, 0);                 // miss → no points
-  assert.strictEqual(g.oppTeam.players[0].fga, 1);    // attempt recorded
+  g = recordStat(g, { team: 'opp', playerId: 'o1', stat: '2pt', made: false }, 1000);
+  assert.strictEqual(g.score.opp, 0); // miss → no points
+  assert.strictEqual(g.oppTeam.players[0].fga, 1); // attempt recorded
 });
 
 test('undo reverses a missed shot (attempt removed)', () => {
   let g = freshGame();
-  g = recordStat(g, { team:'my', playerId:'p1', stat:'2pt', made:false }, 1000);
+  g = recordStat(g, { team: 'my', playerId: 'p1', stat: '2pt', made: false }, 1000);
   assert.strictEqual(g.myTeam.players[0].fga, 1);
   g = undo(g);
   assert.strictEqual(g.myTeam.players[0].fga, 0);
@@ -204,7 +220,7 @@ test('adjustTeamFouls changes count, clamps at zero, logs applied delta', () => 
   const last = g.log[g.log.length - 1];
   assert.strictEqual(last.type, 'team_foul_adj');
   assert.strictEqual(last.rev.kind, 'teamfoul');
-  assert.strictEqual(last.rev.delta, -3);   // only -3 actually applied
+  assert.strictEqual(last.rev.delta, -3); // only -3 actually applied
 });
 
 test('undo reverses a manual team-foul adjustment', () => {
@@ -222,9 +238,9 @@ test('adjustScore clamps at zero and logs applied delta', () => {
   assert.strictEqual(g.score.my, 3);
   g = adjustScore(g, 'my', -5, 2000);
   assert.strictEqual(g.score.my, 0);
-  const last = g.log[g.log.length-1];
+  const last = g.log[g.log.length - 1];
   assert.strictEqual(last.type, 'score_adj');
-  assert.strictEqual(last.rev.score, -3);   // only -3 actually applied
+  assert.strictEqual(last.rev.score, -3); // only -3 actually applied
 });
 
 test('togglePossession flips and logs', () => {
@@ -247,21 +263,21 @@ test('adjustTimeouts changes count, clamps at zero, logs applied delta', () => {
   assert.strictEqual(g.timeouts.opp, 2);
   g = adjustTimeouts(g, 'opp', -5, 2000);
   assert.strictEqual(g.timeouts.opp, 0);
-  const last = g.log[g.log.length-1];
+  const last = g.log[g.log.length - 1];
   assert.strictEqual(last.type, 'timeout_adj');
   assert.strictEqual(last.rev.kind, 'timeoutadj');
-  assert.strictEqual(last.rev.delta, -2);   // only -2 actually applied
+  assert.strictEqual(last.rev.delta, -2); // only -2 actually applied
 });
 
 test('adjustTimeouts does not touch the clock (unlike the old recordTimeout)', () => {
   let g = startClock(freshGame(), 1000);
   g = adjustTimeouts(g, 'my', 1, 2000);
-  assert.strictEqual(g.clock.running, true);   // no auto-stop — same as fouls/points
+  assert.strictEqual(g.clock.running, true); // no auto-stop — same as fouls/points
 });
 
 test('clamped no-op adjustments do not write a log entry', () => {
-  const g0 = freshGame();                          // all counts start at 0
-  assert.deepStrictEqual(adjustTimeouts(g0, 'my', -1, 1000), g0);   // already 0 → unchanged
+  const g0 = freshGame(); // all counts start at 0
+  assert.deepStrictEqual(adjustTimeouts(g0, 'my', -1, 1000), g0); // already 0 → unchanged
   assert.deepStrictEqual(adjustTeamFouls(g0, 'my', -1, 1000), g0);
   assert.deepStrictEqual(adjustScore(g0, 'my', -1, 1000), g0);
 });
@@ -279,7 +295,7 @@ const { undo } = app;
 
 test('undo reverses a 2pt make exactly', () => {
   let g = freshGame();
-  g = recordStat(g, { team:'my', playerId:'p1', stat:'2pt' }, 1000);
+  g = recordStat(g, { team: 'my', playerId: 'p1', stat: '2pt' }, 1000);
   g = undo(g);
   const p = g.myTeam.players[0];
   assert.strictEqual(p.pts, 0);
@@ -289,15 +305,14 @@ test('undo reverses a 2pt make exactly', () => {
   assert.strictEqual(g.log.length, 0);
 });
 
-
 test('sequential undo peels actions in reverse', () => {
   let g = freshGame();
-  g = recordStat(g, { team:'my', playerId:'p1', stat:'foul' }, 1000);
-  g = recordStat(g, { team:'my', playerId:'p1', stat:'2pt' }, 2000);
-  g = undo(g);  // undo the 2pt
+  g = recordStat(g, { team: 'my', playerId: 'p1', stat: 'foul' }, 1000);
+  g = recordStat(g, { team: 'my', playerId: 'p1', stat: '2pt' }, 2000);
+  g = undo(g); // undo the 2pt
   assert.strictEqual(g.score.my, 0);
-  assert.strictEqual(g.myTeam.players[0].pf, 1);   // foul still there
-  g = undo(g);  // undo the foul
+  assert.strictEqual(g.myTeam.players[0].pf, 1); // foul still there
+  g = undo(g); // undo the foul
   assert.strictEqual(g.myTeam.players[0].pf, 0);
   assert.strictEqual(g.teamFouls.my, 0);
 });
@@ -305,37 +320,39 @@ test('sequential undo peels actions in reverse', () => {
 test('undo on empty / non-reversible log is a no-op', () => {
   let g = freshGame();
   assert.deepStrictEqual(undo(g), g);
-  g = endHalf(g, 1000);          // end_period entry has no rev
-  assert.deepStrictEqual(undo(g), g);   // no-op on a non-reversible entry
+  g = endHalf(g, 1000); // end_period entry has no rev
+  assert.deepStrictEqual(undo(g), g); // no-op on a non-reversible entry
 });
 
 const { teamToSave } = app;
 
 function gameWithSide(side) {
   return newGame({
-    config:{ halfLengthMin:18, numHalves:2, otLengthMin:4, myTeamSide:side },
-    myTeam:{ id:'mine', name:'Mine', players:[{id:'p1',num:5,name:'Smith'}] },
-    oppTeam:{ name:'Them', players:[{id:'o1',num:9,name:''}] },
+    config: { halfLengthMin: 18, numHalves: 2, otLengthMin: 4, myTeamSide: side },
+    myTeam: { id: 'mine', name: 'Mine', players: [{ id: 'p1', num: 5, name: 'Smith' }] },
+    oppTeam: { name: 'Them', players: [{ id: 'o1', num: 9, name: '' }] },
   });
 }
 
 for (const side of ['home', 'away']) {
   test(`detailed stats attach to my team when myTeamSide=${side}`, () => {
     let g = gameWithSide(side);
-    g = recordStat(g, { team:'my', playerId:'p1', stat:'oreb' }, 1000);
+    g = recordStat(g, { team: 'my', playerId: 'p1', stat: 'oreb' }, 1000);
     assert.strictEqual(g.myTeam.players[0].oreb, 1);
   });
 
   test(`both teams record the full stat set when myTeamSide=${side}`, () => {
     let g = gameWithSide(side);
-    g = recordStat(g, { team:'opp', playerId:'o1', stat:'blk' }, 1000);
+    g = recordStat(g, { team: 'opp', playerId: 'o1', stat: 'blk' }, 1000);
     assert.strictEqual(g.oppTeam.players[0].blk, 1);
   });
 
   test(`teamToSave returns my team roster when myTeamSide=${side}`, () => {
     const g = gameWithSide(side);
     assert.deepStrictEqual(teamToSave(g), {
-      id:'mine', name:'Mine', players:[{ id:'p1', num:5, name:'Smith' }],
+      id: 'mine',
+      name: 'Mine',
+      players: [{ id: 'p1', num: 5, name: 'Smith' }],
     });
   });
 }
@@ -354,16 +371,16 @@ test('deserialize returns null on garbage', () => {
 
 test('migrateGame hydrates legacy players (reb -> dreb, defaults, drops makeMode)', () => {
   const legacy = {
-    screen:'game',
-    myTeam:{ id:'t', name:'M', players:[{ id:'p1', num:5, name:'S', pts:2, reb:3 }] },
-    oppTeam:{ name:'O', players:[{ id:'o1', num:9, name:'', reb:1 }] },
-    makeMode:false,
+    screen: 'game',
+    myTeam: { id: 't', name: 'M', players: [{ id: 'p1', num: 5, name: 'S', pts: 2, reb: 3 }] },
+    oppTeam: { name: 'O', players: [{ id: 'o1', num: 9, name: '', reb: 1 }] },
+    makeMode: false,
   };
   const g = migrateGame(legacy);
   assert.strictEqual(g.myTeam.players[0].oreb, 0);
-  assert.strictEqual(g.myTeam.players[0].dreb, 3);          // legacy reb folded into dreb
-  assert.strictEqual(g.myTeam.players[0].pts, 2);           // existing stats preserved
-  assert.strictEqual('reb' in g.myTeam.players[0], false);  // legacy field dropped
+  assert.strictEqual(g.myTeam.players[0].dreb, 3); // legacy reb folded into dreb
+  assert.strictEqual(g.myTeam.players[0].pts, 2); // existing stats preserved
+  assert.strictEqual('reb' in g.myTeam.players[0], false); // legacy field dropped
   assert.strictEqual(g.oppTeam.players[0].dreb, 1);
   assert.strictEqual('makeMode' in g, false);
 });
@@ -377,8 +394,8 @@ test('migrateGame is a no-op-ish on a current game and tolerates null', () => {
 });
 
 test('isResumable only for in-progress game screen', () => {
-  assert.strictEqual(isResumable(freshGame()), true);             // screen:'game'
-  assert.strictEqual(isResumable({ screen:'summary' }), false);
+  assert.strictEqual(isResumable(freshGame()), true); // screen:'game'
+  assert.strictEqual(isResumable({ screen: 'summary' }), false);
   assert.strictEqual(isResumable(null), false);
 });
 
@@ -388,13 +405,13 @@ test('endHalf advances period, resets clock and team fouls, snapshots score', ()
   let g = freshGame();
   g = adjustScore(g, 'my', 30, 1000);
   g = adjustScore(g, 'opp', 25, 1000);
-  g.teamFouls = { my:5, opp:6 };
+  g.teamFouls = { my: 5, opp: 6 };
   g = endHalf(g, 2000);
   assert.strictEqual(g.period, 2);
-  assert.strictEqual(g.clock.remainingSec, 18*60);
-  assert.deepStrictEqual(g.teamFouls, { my:0, opp:0 });
-  assert.deepStrictEqual(g.periodScores[0], { my:30, opp:25 });
-  assert.strictEqual(g.log[g.log.length-1].type, 'end_period');
+  assert.strictEqual(g.clock.remainingSec, 18 * 60);
+  assert.deepStrictEqual(g.teamFouls, { my: 0, opp: 0 });
+  assert.deepStrictEqual(g.periodScores[0], { my: 30, opp: 25 });
+  assert.strictEqual(g.log[g.log.length - 1].type, 'end_period');
 });
 
 test('addOvertime sets OT clock and toggles possession', () => {
@@ -402,10 +419,10 @@ test('addOvertime sets OT clock and toggles possession', () => {
   g.period = 2;
   g.possession = 'my';
   g = addOvertime(g, 1000);
-  assert.strictEqual(g.period, 3);                 // OT1
-  assert.strictEqual(g.clock.remainingSec, 4*60);
+  assert.strictEqual(g.period, 3); // OT1
+  assert.strictEqual(g.clock.remainingSec, 4 * 60);
   assert.strictEqual(g.possession, 'opp');
-  assert.deepStrictEqual(g.teamFouls, { my:0, opp:0 });
+  assert.deepStrictEqual(g.teamFouls, { my: 0, opp: 0 });
 });
 
 test('endGame moves to summary and snapshots final period', () => {
@@ -414,76 +431,79 @@ test('endGame moves to summary and snapshots final period', () => {
   g = adjustScore(g, 'my', 50, 1000);
   g = endGame(g, 2000);
   assert.strictEqual(g.screen, 'summary');
-  assert.deepStrictEqual(g.periodScores[g.periodScores.length-1], { my:50, opp:0 });
-  assert.strictEqual(g.log[g.log.length-1].type, 'end_game');
+  assert.deepStrictEqual(g.periodScores[g.periodScores.length - 1], { my: 50, opp: 0 });
+  assert.strictEqual(g.log[g.log.length - 1].type, 'end_game');
 });
 
 const { upsertHistory, removeFromHistory, reopenGame } = app;
 
 test('upsertHistory appends a new game and replaces by id without mutating input', () => {
-  const a = { id:'g1', score:{ my:1, opp:0 } };
-  const b = { id:'g2', score:{ my:2, opp:0 } };
+  const a = { id: 'g1', score: { my: 1, opp: 0 } };
+  const b = { id: 'g2', score: { my: 2, opp: 0 } };
   const h0 = [];
   const h1 = upsertHistory(h0, a);
-  assert.strictEqual(h0.length, 0);            // input not mutated
+  assert.strictEqual(h0.length, 0); // input not mutated
   assert.strictEqual(h1.length, 1);
   const h2 = upsertHistory(h1, b);
   assert.strictEqual(h2.length, 2);
-  const h3 = upsertHistory(h2, { id:'g1', score:{ my:9, opp:0 } });
-  assert.strictEqual(h3.length, 2);            // replaced, not appended
-  assert.strictEqual(h3.find((g)=>g.id==='g1').score.my, 9);
+  const h3 = upsertHistory(h2, { id: 'g1', score: { my: 9, opp: 0 } });
+  assert.strictEqual(h3.length, 2); // replaced, not appended
+  assert.strictEqual(h3.find((g) => g.id === 'g1').score.my, 9);
 });
 
 test('removeFromHistory removes by id and is a no-op for unknown id', () => {
-  const h = [{ id:'g1' }, { id:'g2' }];
-  assert.deepStrictEqual(removeFromHistory(h, 'g1'), [{ id:'g2' }]);
+  const h = [{ id: 'g1' }, { id: 'g2' }];
+  assert.deepStrictEqual(removeFromHistory(h, 'g1'), [{ id: 'g2' }]);
   assert.deepStrictEqual(removeFromHistory(h, 'nope'), h);
 });
 
 test('reopenGame flips to game screen and cleanly undoes the END GAME', () => {
   let g = freshGame();
-  g = endHalf(g, 1000);          // period 2, periodScores=[H1]
-  g = endGame(g, 2000);          // summary, periodScores=[H1,H2], trailing end_game log
+  g = endHalf(g, 1000); // period 2, periodScores=[H1]
+  g = endGame(g, 2000); // summary, periodScores=[H1,H2], trailing end_game log
   assert.strictEqual(g.screen, 'summary');
   assert.strictEqual(g.periodScores.length, 2);
 
   const r = reopenGame(g);
   assert.strictEqual(r.screen, 'game');
-  assert.strictEqual(r.periodScores.length, 1);                    // last snapshot popped
-  assert.strictEqual(r.log.some((e)=>e.type==='end_game'), false); // end_game log removed
-  assert.strictEqual(g.periodScores.length, 2);                    // original not mutated
+  assert.strictEqual(r.periodScores.length, 1); // last snapshot popped
+  assert.strictEqual(
+    r.log.some((e) => e.type === 'end_game'),
+    false,
+  ); // end_game log removed
+  assert.strictEqual(g.periodScores.length, 2); // original not mutated
 
-  const re = endGame(r, 3000);   // re-ending resnapshots correctly, no double-count
+  const re = endGame(r, 3000); // re-ending resnapshots correctly, no double-count
   assert.strictEqual(re.periodScores.length, 2);
 });
 
 const { subIn, subOut, fmtMinutes } = app;
 
 test('subIn marks a player on court and stamps inClock', () => {
-  let g = startClock(freshGame(), 1000);          // running, remaining 18*60
+  let g = startClock(freshGame(), 1000); // running, remaining 18*60
   g = subIn(g, 'my', 'p1', 1000);
   const p = g.myTeam.players[0];
   assert.strictEqual(p.onCourt, true);
-  assert.strictEqual(p.inClock, 18*60);
-  assert.strictEqual(g.log[g.log.length-1].type, 'sub_in');
+  assert.strictEqual(p.inClock, 18 * 60);
+  assert.strictEqual(g.log[g.log.length - 1].type, 'sub_in');
 });
 
 test('subOut accrues court seconds = clockIn - clockOut and clears on court', () => {
   let g = startClock(freshGame(), 1000);
-  g = subIn(g, 'my', 'p1', 1000);                 // inClock 18*60
-  g = subOut(g, 'my', 'p1', 61000);               // 60s later → remaining 18*60-60
+  g = subIn(g, 'my', 'p1', 1000); // inClock 18*60
+  g = subOut(g, 'my', 'p1', 61000); // 60s later → remaining 18*60-60
   const p = g.myTeam.players[0];
   assert.strictEqual(p.courtSecs, 60);
   assert.strictEqual(p.onCourt, false);
   assert.strictEqual(p.inClock, null);
-  assert.strictEqual(g.log[g.log.length-1].type, 'sub_out');
+  assert.strictEqual(g.log[g.log.length - 1].type, 'sub_out');
 });
 
 test('subIn/subOut are no-ops in the wrong state', () => {
   const g0 = freshGame();
-  assert.deepStrictEqual(subOut(g0, 'my', 'p1', 1000), g0);   // not on court → no-op
+  assert.deepStrictEqual(subOut(g0, 'my', 'p1', 1000), g0); // not on court → no-op
   let g = subIn(g0, 'my', 'p1', 1000);
-  assert.deepStrictEqual(subIn(g, 'my', 'p1', 2000), g);      // already on court → no-op
+  assert.deepStrictEqual(subIn(g, 'my', 'p1', 2000), g); // already on court → no-op
 });
 
 test('fmtMinutes formats seconds to one-decimal minutes', () => {
@@ -496,43 +516,43 @@ const { addPlayerToGame } = app;
 
 test('addPlayerToGame appends a full-stat player to the named team', () => {
   const g0 = freshGame();
-  const g = addPlayerToGame(g0, 'my', { id:'p9', num:23, name:'New' });
-  assert.strictEqual(g0.myTeam.players.length, 1);   // input not mutated
+  const g = addPlayerToGame(g0, 'my', { id: 'p9', num: 23, name: 'New' });
+  assert.strictEqual(g0.myTeam.players.length, 1); // input not mutated
   assert.strictEqual(g.myTeam.players.length, 2);
   const p = g.myTeam.players[1];
   assert.strictEqual(p.id, 'p9');
   assert.strictEqual(p.num, 23);
   assert.strictEqual(p.name, 'New');
   assert.strictEqual(p.pts, 0);
-  assert.strictEqual(p.oreb, 0);                      // full zeroed stat set
+  assert.strictEqual(p.oreb, 0); // full zeroed stat set
   assert.strictEqual('dreb' in p, true);
-  assert.strictEqual(g.oppTeam.players.length, 1);    // opponent untouched
+  assert.strictEqual(g.oppTeam.players.length, 1); // opponent untouched
 });
 
 test('addPlayerToGame can add to the opponent', () => {
-  const g = addPlayerToGame(freshGame(), 'opp', { id:'o9', num:7, name:'' });
+  const g = addPlayerToGame(freshGame(), 'opp', { id: 'o9', num: 7, name: '' });
   assert.strictEqual(g.oppTeam.players.length, 2);
   assert.strictEqual(g.oppTeam.players[1].num, 7);
   assert.strictEqual(g.myTeam.players.length, 1);
 });
 
 test('court time accrues across a half boundary', () => {
-  let g = startClock(freshGame(), 1000);          // H1 running, remaining 18*60
-  g = subIn(g, 'my', 'p1', 1000);                 // inClock 18*60
-  g = endHalf(g, 481000);                          // 480s elapsed → close at 18*60-480; reopen at H2 full
+  let g = startClock(freshGame(), 1000); // H1 running, remaining 18*60
+  g = subIn(g, 'my', 'p1', 1000); // inClock 18*60
+  g = endHalf(g, 481000); // 480s elapsed → close at 18*60-480; reopen at H2 full
   assert.strictEqual(g.myTeam.players[0].courtSecs, 480);
   assert.strictEqual(g.period, 2);
   assert.strictEqual(g.myTeam.players[0].onCourt, true);
-  assert.strictEqual(g.myTeam.players[0].inClock, 18*60);   // reopened at new full clock
-  g = startClock(g, 500000);                       // H2 running
-  g = subOut(g, 'my', 'p1', 560000);               // 60s in H2
-  assert.strictEqual(g.myTeam.players[0].courtSecs, 540);   // 480 + 60
+  assert.strictEqual(g.myTeam.players[0].inClock, 18 * 60); // reopened at new full clock
+  g = startClock(g, 500000); // H2 running
+  g = subOut(g, 'my', 'p1', 560000); // 60s in H2
+  assert.strictEqual(g.myTeam.players[0].courtSecs, 540); // 480 + 60
 });
 
 test('endGame closes the final on-court interval', () => {
   let g = startClock(freshGame(), 1000);
   g = subIn(g, 'my', 'p1', 1000);
-  g = endGame(g, 121000);                          // 120s elapsed
+  g = endGame(g, 121000); // 120s elapsed
   assert.strictEqual(g.screen, 'summary');
   assert.strictEqual(g.myTeam.players[0].courtSecs, 120);
 });
@@ -542,12 +562,40 @@ const { playerEff } = app;
 
 test('playerEff computes efficiency from a mixed stat line', () => {
   // reb=5; missFG=(9+3)-(4+1)=7; missFT=4-2=2; eff = 10+5+2+1+1 -7 -2 -5 = 5
-  const p = { pts:10, fgm:4, fga:9, tpm:1, tpa:3, ftm:2, fta:4, oreb:2, dreb:3, stl:1, blk:1, ast:2, to:5 };
+  const p = {
+    pts: 10,
+    fgm: 4,
+    fga: 9,
+    tpm: 1,
+    tpa: 3,
+    ftm: 2,
+    fta: 4,
+    oreb: 2,
+    dreb: 3,
+    stl: 1,
+    blk: 1,
+    ast: 2,
+    to: 5,
+  };
   assert.strictEqual(playerEff(p), 5);
 });
 
 test('playerEff can be negative', () => {
   // missFG=5, missFT=2, to=3 → 0 - 5 - 2 - 3 = -10
-  const p = { pts:0, fgm:0, fga:5, tpm:0, tpa:0, ftm:0, fta:2, oreb:0, dreb:0, stl:0, blk:0, ast:0, to:3 };
+  const p = {
+    pts: 0,
+    fgm: 0,
+    fga: 5,
+    tpm: 0,
+    tpa: 0,
+    ftm: 0,
+    fta: 2,
+    oreb: 0,
+    dreb: 0,
+    stl: 0,
+    blk: 0,
+    ast: 0,
+    to: 3,
+  };
   assert.strictEqual(playerEff(p), -10);
 });
