@@ -351,6 +351,7 @@ body {
   background: var(--btn-bg);
   color: var(--btn-text);
   border-radius: 6px;
+  height: 26px;
 }
 
 .period-ctl {
@@ -367,6 +368,7 @@ body {
   background: var(--btn-bg);
   color: var(--btn-text);
   border-radius: 6px;
+  height: 26px;
 }
 
 .tfadj {
