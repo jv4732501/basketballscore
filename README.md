@@ -17,10 +17,8 @@ Known false positives (not real bugs, left as-is to avoid scope creep — see `.
 - 2 "Cannot find name 'node:test'"/`'node:assert'` errors in `logic.test.js` — a hardcoded TypeScript diagnostic for `require()`-ing Node builtins without `@types/node`, which ambient module declarations can't suppress.
 
 ## Formatting
-Format-on-save is automatic in VS Code via `.vscode/settings.json` — built-in formatters, no extension needed.
-Optional one-off terminal check/fix: `npx prettier --check app.js styles.css logic.test.js` / `npx prettier --write app.js styles.css logic.test.js` (downloads temporarily; requires network, not a permanent install).
-
-Known gap: VS Code's built-in formatter is lighter-touch than Prettier — it fixes indentation and local spacing, but won't wrap long lines, won't normalize quote style, and won't insert missing semicolons the way Prettier does. So a freshly-typed line can look visibly different from the rest of the file until you re-run the `npx prettier --write` command above. If this friction gets old, installing the "Prettier - Code formatter" VS Code extension and setting it as the default formatter for `[javascript]`/`[css]` in `.vscode/settings.json` would make format-on-save match Prettier's style exactly.
+Format-on-save is automatic in VS Code via `.vscode/settings.json`. `.js`/`.css` files are formatted by the "Prettier - Code formatter" extension (install it from the Extensions panel — id `esbenp.prettier-vscode`); `.html` uses VS Code's built-in formatter. Without the Prettier extension installed, saving a `.js`/`.css` file will show a "no formatter found" message instead of silently falling back — install the extension, or run the terminal command below manually.
+Optional one-off terminal check/fix (no extension needed): `npx prettier --check app.js styles.css logic.test.js` / `npx prettier --write app.js styles.css logic.test.js` (downloads temporarily; requires network, not a permanent install).
 
 ## Deploy
 Commit the three files to a GitHub repo and enable GitHub Pages on the branch.
