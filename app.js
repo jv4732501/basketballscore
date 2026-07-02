@@ -1591,7 +1591,8 @@ function openStatMenu(anchorBtn, stat) {
 function attachPlayerPress(btn) {
   const [team, id] = btn.dataset.pl.split(':');
   let timer = null,
-    longFired = false;
+    longFired = false,
+    clickTimer = null;
   const start = () => {
     longFired = false;
     timer = setTimeout(() => {
@@ -1617,9 +1618,18 @@ function attachPlayerPress(btn) {
       longFired = false;
       return;
     }
-    state.game.selectedPlayerId = state.game.selectedPlayerId === id ? null : id;
-    saveGame();
-    render();
+    if (clickTimer) {
+      clearTimeout(clickTimer);
+      clickTimer = null;
+      openPlayerEditDialog(team, id);
+      return;
+    }
+    clickTimer = setTimeout(() => {
+      clickTimer = null;
+      state.game.selectedPlayerId = state.game.selectedPlayerId === id ? null : id;
+      saveGame();
+      render();
+    }, 300);
   };
 }
 
@@ -1682,6 +1692,41 @@ function openTeamActivityDialog(kind, team) {
   dlg.querySelector('.dlgclose').addEventListener('click', closeActivityDialog);
   document.body.appendChild(back);
   document.body.appendChild(dlg);
+}
+
+function openPlayerEditDialog(team, id) {
+  const g = state.game;
+  const t = team === 'my' ? g.myTeam : g.oppTeam;
+  const p = t.players.find((x) => x.id === id);
+  if (!p) return;
+  const back = document.createElement('div');
+  back.className = 'dlgback';
+  back.addEventListener('pointerdown', closeActivityDialog);
+  const dlg = document.createElement('div');
+  dlg.className = 'dialog';
+  dlg.innerHTML = `<h3>Edit Player</h3><div class="dlgbody"><label>Number <input id="pe-num" type="number" inputmode="numeric" value="${p.num}"></label><label>Name <input id="pe-name" value="${esc(p.name || '')}"></label><p id="pe-error" class="error"></p></div><div class="tip-row"><button id="pe-save" class="tip">Save</button><button id="pe-cancel">Cancel</button></div>`;
+  document.body.appendChild(back);
+  document.body.appendChild(dlg);
+  dlg.querySelector('#pe-save').onclick = () => {
+    const num = parseInt(dlg.querySelector('#pe-num').value, 10);
+    if (isNaN(num)) {
+      dlg.querySelector('#pe-error').textContent = 'Enter a jersey number.';
+      return;
+    }
+    const name = dlg.querySelector('#pe-name').value.trim();
+    commit((game) => editPlayer(game, team, id, { num, name }));
+    if (team === 'my') {
+      const st = state.teams.find((x) => x.id === state.game.myTeam.id);
+      const sp = st && st.players.find((x) => x.id === id);
+      if (sp) {
+        sp.num = num;
+        sp.name = name;
+        saveTeams();
+      }
+    }
+    closeActivityDialog();
+  };
+  dlg.querySelector('#pe-cancel').onclick = closeActivityDialog;
 }
 
 function closeActivityDialog() {

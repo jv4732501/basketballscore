@@ -706,6 +706,22 @@ table.bs .totrow td {
   margin: 0 0 8px;
 }
 
+.dialog label {
+  display: block;
+  margin: 8px 0;
+  font-size: 0.9rem;
+}
+
+.dialog input {
+  width: 100%;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text);
+}
+
 .dlgbody {
   overflow-y: auto;
   font-size: 0.85rem;
