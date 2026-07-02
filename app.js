@@ -748,16 +748,28 @@ function currentMyTeamName(d) {
 
 function renderRoster(players, which) {
   if (!players.length) return `<p class="muted">No players yet</p>`;
+  if (which === 'te') {
+    return (
+      `<ul class="list">` +
+      players
+        .map(
+          (p, i) => `
+        <li class="listrow">
+          <span class="listmain">#${p.num} ${esc(p.name || '')}</span>
+          <button data-editbtn="${which}:${i}">Edit</button>
+          <button data-rm="${which}:${i}" class="danger">Delete</button>
+        </li>`,
+        )
+        .join('') +
+      `</ul>`
+    );
+  }
   return (
     `<ul class="roster">` +
     players
       .map(
         (p, i) =>
-          `<li>${
-            which === 'te'
-              ? `<span class="editpl" data-editpl="${which}:${i}">#${p.num} ${esc(p.name || '')}</span>`
-              : `#${p.num} ${esc(p.name || '')}`
-          }<button data-rm="${which}:${i}" class="rm">×</button></li>`,
+          `<li>#${p.num} ${esc(p.name || '')}<button data-rm="${which}:${i}" class="rm">×</button></li>`,
       )
       .join('') +
     `</ul>`
@@ -955,13 +967,15 @@ function renderTeamEditor(el) {
     (b) =>
       (b.onclick = () => {
         const [, i] = b.dataset.rm.split(':'); // "te:i"
+        const p = d.players[parseInt(i, 10)];
+        if (!confirm(`Remove #${p.num}${p.name ? ' ' + p.name : ''} from the roster?`)) return;
         d.players.splice(parseInt(i, 10), 1);
         renderTeams();
       }),
   );
-  el_each('[data-editpl]', (b) =>
-    b.addEventListener('dblclick', () => {
-      const [, i] = b.dataset.editpl.split(':'); // "te:i"
+  el_each('[data-editbtn]', (b) =>
+    (b.onclick = () => {
+      const [, i] = b.dataset.editbtn.split(':'); // "te:i"
       openRosterEditDialog(parseInt(i, 10));
     }),
   );
