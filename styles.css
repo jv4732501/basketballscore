@@ -367,7 +367,6 @@ body {
   background: var(--btn-bg);
   color: var(--btn-text);
   border-radius: 6px;
-  height: 26px;
 }
 
 .tfadj {
@@ -406,6 +405,7 @@ body {
   display: flex;
   flex: 1;
   overflow: hidden;
+  border-top: 1px solid var(--border);
 }
 
 .col {
