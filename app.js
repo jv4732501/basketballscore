@@ -1261,10 +1261,10 @@ function renderGame() {
     </header>
 
     <div class="infobar">
-      <span class="tf">Fouls: ${tf[leftTeam]}
+      <span class="tf">FOULS: ${tf[leftTeam]}
         <button class="tfadj" data-tf="${leftTeam}:-1" ${g.teamFouls[leftTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-tf="${leftTeam}:1">+</button> ${bonusBadge(leftTeam)}</span>
-      <button id="poss">Pos: ${g.possession === leftTeam ? '◀' : '▶'}</button>
-      <span class="tf">Fouls: ${tf[rightTeam]}
+      <button id="poss">POS: ${g.possession === leftTeam ? '◀' : '▶'}</button>
+      <span class="tf">FOULS: ${tf[rightTeam]}
         <button class="tfadj" data-tf="${rightTeam}:-1" ${g.teamFouls[rightTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-tf="${rightTeam}:1">+</button> ${bonusBadge(rightTeam)}</span>
     </div>
     <div class="infobar small">
