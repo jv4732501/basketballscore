@@ -1014,7 +1014,7 @@ function renderControls(g) {
       <button data-stat="2pt" class="${flashClass('2pt')}">2PT</button>
       <button data-stat="3pt" class="${flashClass('3pt')}">3PT</button>
       <button data-stat="ft" class="${flashClass('ft')}">FT</button>
-      <button id="btn-miss" class="${missArm?'armed':''}${flashClass('btn-miss')}">MISS</button>
+      <button id="btn-miss" class="${missArm?'armed':''}">MISS</button>
       ${['oreb','dreb','stl','blk','ast','to'].map((s)=>`<button data-stat="${s}" class="${flashClass(s)}">${s==='to'?'TOVR':s.toUpperCase()}</button>`).join('')}
       <button data-stat="foul" class="${flashClass('foul')}">FOUL</button>
       <button id="btn-undo" class="undo${flashClass('btn-undo')}">UNDO</button>
@@ -1068,7 +1068,7 @@ function wireGame() {
   $('clk-toggle') && ($('clk-toggle').onclick = () => commit((game,now)=>toggleClock(game,now)));
   el_each('[data-clk]', (b) => attachClockPress(b));
 
-  $('btn-miss') && ($('btn-miss').onclick = () => { flashKey = 'btn-miss'; missArm = !missArm; render(); });
+  $('btn-miss') && ($('btn-miss').onclick = () => { missArm = !missArm; render(); });
   $('btn-undo') && ($('btn-undo').onclick = () => { flashKey = 'btn-undo'; commit((game)=>undo(game)); });
   $('btn-endhalf') && ($('btn-endhalf').onclick = () => commit((game,now)=>endHalf(game,now)));
   $('btn-endgame') && ($('btn-endgame').onclick = () => {
