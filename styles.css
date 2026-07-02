@@ -526,6 +526,10 @@ body {
   color: #fff;
 }
 
+#btn-miss.locked {
+  border-color: var(--accent);
+}
+
 .recent {
   flex: 1;
   min-height: 0;
