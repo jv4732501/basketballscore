@@ -12,6 +12,10 @@ Open `index.html` in a browser, or serve the folder (e.g. `python -m http.server
 Type-checking runs automatically in VS Code via `jsconfig.json` — open the project and check the Problems panel, no install needed.
 Optional one-off terminal check: `npx tsc --noEmit -p jsconfig.json` (downloads TypeScript temporarily; requires network, not a permanent install).
 
+Known false positives (not real bugs, left as-is to avoid scope creep — see `.superpowers/sdd/progress.md` Cycle 10 for details):
+- ~10 "Property 'value'/'click' does not exist" errors where `app.js`'s `$(id)` DOM helper returns a generic `HTMLElement`/`Element` instead of the specific input/button subtype.
+- 2 "Cannot find name 'node:test'"/`'node:assert'` errors in `logic.test.js` — a hardcoded TypeScript diagnostic for `require()`-ing Node builtins without `@types/node`, which ambient module declarations can't suppress.
+
 ## Deploy
 Commit the three files to a GitHub repo and enable GitHub Pages on the branch.
 
