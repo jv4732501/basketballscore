@@ -424,6 +424,16 @@ function addPlayerToGame(game, team, { id, num, name }) {
   return g;
 }
 
+function editPlayer(game, team, id, { num, name }) {
+  const g = clone(game);
+  const t = team === 'my' ? g.myTeam : g.oppTeam;
+  const p = t.players.find((x) => x.id === id);
+  if (!p) return game;
+  p.num = num;
+  p.name = name;
+  return g;
+}
+
 function teamToSave(game) {
   return {
     id: game.myTeam.id,
@@ -510,6 +520,7 @@ if (typeof module !== 'undefined' && module.exports) {
     undo,
     teamToSave,
     addPlayerToGame,
+    editPlayer,
     serialize,
     deserialize,
     isResumable,

@@ -536,6 +536,28 @@ test('addPlayerToGame can add to the opponent', () => {
   assert.strictEqual(g.myTeam.players.length, 1);
 });
 
+const { editPlayer } = app;
+
+test('editPlayer updates an existing my-team player number and name', () => {
+  const g0 = freshGame();
+  const g = editPlayer(g0, 'my', 'p1', { num: 34, name: 'Jones' });
+  assert.strictEqual(g0.myTeam.players[0].num, 5); // input not mutated
+  assert.strictEqual(g.myTeam.players[0].num, 34);
+  assert.strictEqual(g.myTeam.players[0].name, 'Jones');
+});
+
+test('editPlayer updates an existing opponent player', () => {
+  const g = editPlayer(freshGame(), 'opp', 'o1', { num: 12, name: 'Doe' });
+  assert.strictEqual(g.oppTeam.players[0].num, 12);
+  assert.strictEqual(g.oppTeam.players[0].name, 'Doe');
+});
+
+test('editPlayer is a no-op for an unknown id', () => {
+  const g0 = freshGame();
+  const g = editPlayer(g0, 'my', 'nope', { num: 99, name: 'Ghost' });
+  assert.strictEqual(g, g0); // unchanged input returned as-is
+});
+
 test('court time accrues across a half boundary', () => {
   let g = startClock(freshGame(), 1000); // H1 running, remaining 18*60
   g = subIn(g, 'my', 'p1', 1000); // inClock 18*60
