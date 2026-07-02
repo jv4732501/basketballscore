@@ -8,6 +8,10 @@ Open `index.html` in a browser, or serve the folder (e.g. `python -m http.server
 ## Test
 `node --test`  (requires Node 17+; no `npm install`)
 
+## Linting
+Type-checking runs automatically in VS Code via `jsconfig.json` — open the project and check the Problems panel, no install needed.
+Optional one-off terminal check: `npx tsc --noEmit -p jsconfig.json` (downloads TypeScript temporarily; requires network, not a permanent install).
+
 ## Deploy
 Commit the three files to a GitHub repo and enable GitHub Pages on the branch.
 
