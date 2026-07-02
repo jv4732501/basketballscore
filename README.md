@@ -16,6 +16,10 @@ Known false positives (not real bugs, left as-is to avoid scope creep — see `.
 - ~10 "Property 'value'/'click' does not exist" errors where `app.js`'s `$(id)` DOM helper returns a generic `HTMLElement`/`Element` instead of the specific input/button subtype.
 - 2 "Cannot find name 'node:test'"/`'node:assert'` errors in `logic.test.js` — a hardcoded TypeScript diagnostic for `require()`-ing Node builtins without `@types/node`, which ambient module declarations can't suppress.
 
+## Formatting
+Format-on-save is automatic in VS Code via `.vscode/settings.json` — built-in formatters, no extension needed.
+Optional one-off terminal check/fix: `npx prettier --check app.js styles.css logic.test.js` / `npx prettier --write app.js styles.css logic.test.js` (downloads temporarily; requires network, not a permanent install).
+
 ## Deploy
 Commit the three files to a GitHub repo and enable GitHub Pages on the branch.
 
