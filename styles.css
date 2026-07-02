@@ -458,7 +458,6 @@ body {
 .addbtn {
   width: 100%;
   padding: 6px;
-  margin-top: 4px;
   font-size: 0.8rem;
   background: var(--surface);
   color: var(--text);
