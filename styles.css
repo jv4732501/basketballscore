@@ -526,7 +526,9 @@ body {
 /* Long-press targets: suppress text selection + the touch callout that triggers the context menu. */
 .pl,
 .grid button,
-.clkstep {
+.clkstep,
+.statlbl,
+.sc {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;

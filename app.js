@@ -1244,7 +1244,7 @@ function renderGame() {
     <header class="gh">
       <div class="score-box">
         <div class="tn">${esc(teamName(g, leftTeam))}</div>
-        <div class="sc">${g.score[leftTeam]}</div>
+        <div class="sc" data-actlog="score:${leftTeam}">${g.score[leftTeam]}</div>
         <div class="adj"><button data-adj="${leftTeam}:-1" ${g.score[leftTeam] === 0 ? 'disabled' : ''}>−</button><button data-adj="${leftTeam}:1">+</button></div>
       </div>
       <div class="clock">
@@ -1258,27 +1258,27 @@ function renderGame() {
       </div>
       <div class="score-box">
         <div class="tn">${esc(teamName(g, rightTeam))}</div>
-        <div class="sc">${g.score[rightTeam]}</div>
+        <div class="sc" data-actlog="score:${rightTeam}">${g.score[rightTeam]}</div>
         <div class="adj"><button data-adj="${rightTeam}:-1" ${g.score[rightTeam] === 0 ? 'disabled' : ''}>−</button><button data-adj="${rightTeam}:1">+</button></div>
       </div>
     </header>
 
     <div class="infobar">
-      <span class="tf">FOULS: ${tf[leftTeam]}
+      <span class="tf"><span class="statlbl" data-actlog="fouls:${leftTeam}">FOULS: ${tf[leftTeam]}</span>
         <button class="tfadj" data-tf="${leftTeam}:-1" ${g.teamFouls[leftTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-tf="${leftTeam}:1">+</button> ${bonusBadge(leftTeam)}</span>
       <button id="poss">POS: ${g.possession === leftTeam ? '◀' : '▶'}</button>
-      <span class="tf">FOULS: ${tf[rightTeam]}
+      <span class="tf"><span class="statlbl" data-actlog="fouls:${rightTeam}">FOULS: ${tf[rightTeam]}</span>
         <button class="tfadj" data-tf="${rightTeam}:-1" ${g.teamFouls[rightTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-tf="${rightTeam}:1">+</button> ${bonusBadge(rightTeam)}</span>
     </div>
     <div class="infobar small">
-      <span class="tf">TO: ${g.timeouts[leftTeam]}
+      <span class="tf"><span class="statlbl" data-actlog="to:${leftTeam}">TO: ${g.timeouts[leftTeam]}</span>
         <button class="tfadj" data-to="${leftTeam}:-1" ${g.timeouts[leftTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-to="${leftTeam}:1">+</button></span>
       <span class="period-ctl">${
         g.period < g.config.numHalves
           ? `<button id="btn-endhalf">END HALF</button>`
           : `<button id="btn-endgame">END GAME</button><button id="btn-ot">+OT</button>`
       }</span>
-      <span class="tf">TO: ${g.timeouts[rightTeam]}
+      <span class="tf"><span class="statlbl" data-actlog="to:${rightTeam}">TO: ${g.timeouts[rightTeam]}</span>
         <button class="tfadj" data-to="${rightTeam}:-1" ${g.timeouts[rightTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-to="${rightTeam}:1">+</button></span>
     </div>
 
@@ -1360,6 +1360,7 @@ function wireGame() {
   const $ = (id) => document.getElementById(id);
 
   el_each('[data-pl]', (b) => attachPlayerPress(b));
+  el_each('[data-actlog]', (b) => attachStatPress(b));
 
   el_each(
     '[data-addopen]',
@@ -1619,6 +1620,57 @@ function openPlayerMenu(anchorBtn, team, id) {
     ? { label: 'Sub Out', act: () => commit((game, now) => subOut(game, team, id, now)) }
     : { label: 'Sub In', act: () => commit((game, now) => subIn(game, team, id, now)) };
   openPopover(anchorBtn, [{ label: 'Activity', act: () => openActivityDialog(team, id) }, subItem]);
+}
+
+function attachStatPress(btn) {
+  const [kind, team] = btn.dataset.actlog.split(':');
+  let timer = null;
+  const start = () => {
+    timer = setTimeout(() => openTeamActivityDialog(kind, team), 500);
+  };
+  const end = () => {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+  };
+  btn.addEventListener('touchstart', start, { passive: true });
+  btn.addEventListener('touchend', end);
+  btn.addEventListener('touchcancel', end);
+  btn.addEventListener('mousedown', start);
+  btn.addEventListener('mouseup', end);
+  btn.addEventListener('mouseleave', end);
+  btn.addEventListener('contextmenu', (e) => e.preventDefault()); // suppress long-press browser menu
+}
+
+const STAT_LOG_TYPES = {
+  fouls: ['foul', 'team_foul_adj'],
+  to: ['timeout_adj'],
+  score: ['2pt_made', '3pt_made', 'ft_made', 'score_adj'],
+};
+const STAT_LOG_LABELS = { fouls: 'Fouls', to: 'Timeouts', score: 'Score' };
+
+function openTeamActivityDialog(kind, team) {
+  const g = state.game;
+  const types = STAT_LOG_TYPES[kind];
+  const events = g.log.filter((e) => e.team === team && types.includes(e.type)).reverse();
+  const rows = events.length
+    ? events
+        .map(
+          (e) =>
+            `<div class="ev">${e.clockText} ${periodLabel(e.period, g.config.numHalves)} — ${esc(e.detail)}</div>`,
+        )
+        .join('')
+    : `<p class="muted">No activity yet</p>`;
+  const back = document.createElement('div');
+  back.className = 'dlgback';
+  back.addEventListener('pointerdown', closeActivityDialog);
+  const dlg = document.createElement('div');
+  dlg.className = 'dialog';
+  dlg.innerHTML = `<h3>${esc(teamDisplayName(g, team))} ${STAT_LOG_LABELS[kind]}</h3><div class="dlgbody">${rows}</div><button class="dlgclose">Close</button>`;
+  dlg.querySelector('.dlgclose').addEventListener('click', closeActivityDialog);
+  document.body.appendChild(back);
+  document.body.appendChild(dlg);
 }
 
 function closeActivityDialog() {
