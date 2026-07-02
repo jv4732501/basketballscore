@@ -337,6 +337,13 @@ body {
 
 #poss {
   flex: 0 0 auto;
+  padding: 4px 10px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  border: 1px solid var(--border);
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border-radius: 6px;
 }
 
 .period-ctl {
@@ -351,8 +358,9 @@ body {
   font-size: 0.8rem;
   border: 1px solid var(--border);
   background: var(--btn-bg);
-  color: #fff;
-  border-radius: 4px;
+  color: var(--btn-text);
+  border-radius: 6px;
+  height: 26px;
 }
 
 .tfadj {
@@ -360,10 +368,10 @@ body {
   height: 26px;
   padding: 0;
   line-height: 1;
-  border-radius: 4px;
+  border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--btn-bg);
-  color: #fff;
+  color: var(--btn-text);
 }
 
 .tfadj:disabled,
