@@ -753,7 +753,11 @@ function renderRoster(players, which) {
     players
       .map(
         (p, i) =>
-          `<li>#${p.num} ${esc(p.name || '')}<button data-rm="${which}:${i}" class="rm">×</button></li>`,
+          `<li>${
+            which === 'te'
+              ? `<span class="editpl" data-editpl="${which}:${i}">#${p.num} ${esc(p.name || '')}</span>`
+              : `#${p.num} ${esc(p.name || '')}`
+          }<button data-rm="${which}:${i}" class="rm">×</button></li>`,
       )
       .join('') +
     `</ul>`
@@ -954,6 +958,12 @@ function renderTeamEditor(el) {
         d.players.splice(parseInt(i, 10), 1);
         renderTeams();
       }),
+  );
+  el_each('[data-editpl]', (b) =>
+    b.addEventListener('dblclick', () => {
+      const [, i] = b.dataset.editpl.split(':'); // "te:i"
+      openRosterEditDialog(parseInt(i, 10));
+    }),
   );
   $('te-save').onclick = () => {
     if (!d.name.trim()) {
@@ -1725,6 +1735,32 @@ function openPlayerEditDialog(team, id) {
       }
     }
     closeActivityDialog();
+  };
+  dlg.querySelector('#pe-cancel').onclick = closeActivityDialog;
+}
+
+function openRosterEditDialog(i) {
+  const d = teamEdit;
+  const p = d.players[i];
+  if (!p) return;
+  const back = document.createElement('div');
+  back.className = 'dlgback';
+  back.addEventListener('pointerdown', closeActivityDialog);
+  const dlg = document.createElement('div');
+  dlg.className = 'dialog';
+  dlg.innerHTML = `<h3>Edit Player</h3><div class="dlgbody"><label>Number <input id="pe-num" type="number" inputmode="numeric" value="${p.num}"></label><label>Name <input id="pe-name" value="${esc(p.name || '')}"></label><p id="pe-error" class="error"></p></div><div class="tip-row"><button id="pe-save" class="tip">Save</button><button id="pe-cancel">Cancel</button></div>`;
+  document.body.appendChild(back);
+  document.body.appendChild(dlg);
+  dlg.querySelector('#pe-save').onclick = () => {
+    const num = parseInt(dlg.querySelector('#pe-num').value, 10);
+    if (isNaN(num)) {
+      dlg.querySelector('#pe-error').textContent = 'Enter a jersey number.';
+      return;
+    }
+    p.num = num;
+    p.name = dlg.querySelector('#pe-name').value.trim();
+    closeActivityDialog();
+    renderTeams();
   };
   dlg.querySelector('#pe-cancel').onclick = closeActivityDialog;
 }

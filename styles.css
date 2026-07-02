@@ -722,6 +722,10 @@ table.bs .totrow td {
   color: var(--text);
 }
 
+.editpl {
+  cursor: pointer;
+}
+
 .dlgbody {
   overflow-y: auto;
   font-size: 0.85rem;
