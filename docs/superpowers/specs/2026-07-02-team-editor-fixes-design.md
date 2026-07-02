@@ -1,31 +1,86 @@
-# Team Editor Roster Fixes: Reliable Edit Trigger, Edit Icon, Focus-Ring Clipping, Delete Confirmation
+# Team Editor Roster Consistency + Fixes
 
 ## Problem
 
-Four related issues on the Team Editor screen ("Edit Team", reached from the Teams tab), found and requested while following up on the just-shipped player-edit-dialog feature (Cycle 21):
+Follow-up on the just-shipped player-edit-dialog feature (Cycle 21), covering four issues on the Team Editor screen ("Edit Team", reached from the Teams tab):
 
-1. **Double-click doesn't reliably open the edit dialog.** The Team Editor's `.editpl` span uses the native browser `dblclick` event. Native `dblclick` is unreliable — often simply never fires — for touch double-taps on many mobile browsers. Every other gesture in this app (long-press, the in-game double-click) is built from `touchstart`/`touchend`/`click` timing rather than a native browser gesture event; the Team Editor is the one place that broke that pattern, which is why it doesn't work while the in-game version does.
-2. **No visible/discoverable way to edit a player** other than the (broken) double-click — a small pencil icon button, always visible next to the existing remove (`×`) button, would fix discoverability regardless of the double-click issue.
-3. **The focus ring on the edit dialog's input fields gets clipped.** `.dlgbody` sets `overflow-y: auto` (needed for the Activity dialog's scrollable log) with no explicit `overflow-x`; per CSS rules, setting only one overflow axis forces the browser to compute the other as non-visible too. The inputs are `width: 100%` flush against `.dlgbody`'s edge, so the browser's default focus ring (rendered a couple pixels outside the input's border) gets clipped at that boundary.
-4. **Removing a player from the Team Editor's roster has no confirmation**, unlike removing a whole team (which already shows `Delete team "..."? This cannot be undone.`).
+1. **Visual inconsistency.** The Team Editor's roster rows use a cramped `<li>#num name<button class="rm">×</button></li>` layout — the only list in the app still styled this way. Both the Teams tab's own team list and the History tab's game list already use a shared `.listrow`/`.listmain` pattern with full labeled buttons ("Edit"/"Delete", "Open"/"Delete"). The roster should match.
+2. **Double-click to edit doesn't reliably work.** It's built on the native `dblclick` DOM event, which is unreliable — often simply never fires — for touch double-taps on many mobile browsers. Every other gesture in this app (long-press, in-game double-click) is built from `touchstart`/`touchend`/`click` timing instead. Since the redesign in point 1 adds a full labeled "Edit" button, double-click is no longer needed as a trigger and is removed entirely, along with its unreliable `dblclick` wiring — this eliminates the bug rather than patching it.
+3. **The edit dialog's input focus ring gets clipped.** `.dlgbody` sets `overflow-y: auto` (needed for the Activity dialog's scrollable log) with no explicit `overflow-x`; per CSS rules, setting only one overflow axis forces the browser to compute the other as non-visible too. The inputs are `width: 100%` flush against `.dlgbody`'s edge, so the browser's default focus ring (rendered a couple pixels outside the input's border) gets clipped at that boundary.
+4. **No confirmation before removing a player** from the Team Editor's roster, unlike removing a whole team (already shows `Delete team "..."? This cannot be undone.`).
 
 ## Scope
 
 - `app.js`:
-  - Replace the `.editpl` `dblclick` listener with the same deferred single-click-timer pattern already used for the in-game double-click (`attachPlayerPress`'s `onclick`), adapted for the case where a single click has no competing action (it's simply a no-op if no second click follows).
-  - `renderRoster`: add a new `<button class="editbtn" data-editbtn="te:i">✎</button>` immediately before the existing `<button data-rm>` — only when `which === 'te'` (same condition as `.editpl`).
-  - `renderTeamEditor`: wire `[data-editbtn]` with a plain single `onclick` calling `openRosterEditDialog(i)` directly (no gesture detection needed — it's an explicit button).
-  - `renderTeamEditor`'s existing `[data-rm]` handler: add a `confirm(...)` prompt before splicing the player out, matching the existing "Delete team" confirmation's style and only for this ("te") roster — the Setup screen's separate `[data-rm]` handler (in `wireSetup()`) is untouched.
+  - `renderRoster`: for `which === 'te'` only, render `<ul class="list">` of `<li class="listrow">` rows — `<span class="listmain">#num name</span>`, a plain `<button data-editbtn="te:i">Edit</button>`, and `<button data-rm="te:i" class="danger">Delete</button>`. The `which === 'my'`/`'opp'` branch (Setup screen roster previews) is completely unchanged — same markup as before.
+  - `renderTeamEditor`: remove the `[data-editpl]`/`dblclick` wiring entirely. Add `el_each('[data-editbtn]', ...)` (plain `onclick` → `openRosterEditDialog(i)`). Add a `confirm(...)` prompt to the existing `[data-rm]` handler before splicing the player out.
 - `styles.css`:
-  - `.dlgbody`: add `padding: 3px;` so the focus ring has room to render.
-  - New `.editbtn` rule, styled like `.rm` (no border/background, larger font-size) but colored `var(--muted)` instead of `var(--danger)`, since editing isn't destructive.
-- Out of scope: the Setup screen's roster (`which` = `'my'`/`'opp'`) gets no new confirmation, no edit icon, no double-click fix — none of these four issues apply there since it never had the `.editpl`/edit-dialog feature to begin with.
+  - Remove the now-unused `.editpl` rule.
+  - Add `padding: 3px;` to `.dlgbody` so the focus ring has room to render.
+  - **No new button-styling CSS needed** — `.list`, `.listrow`, `.listmain`, `.listrow button`, and `.listrow button.danger` already exist (used by the Teams tab's team list and the History tab's game list) and are reused verbatim.
+- Out of scope: the Setup screen's roster (`which` = `'my'`/`'opp'`) is untouched — no edit button, no confirmation, no styling change. `openRosterEditDialog` itself is unchanged (it already operates on `teamEdit.players[i]` regardless of how the trigger UI looks).
 
 ## Approach
 
-### 1. Reliable click-vs-double-click for `.editpl`
+### 1 & 2. Roster row redesign (`renderRoster`), double-click removed
 
-Current wiring (`renderTeamEditor`):
+Current:
+```js
+function renderRoster(players, which) {
+  if (!players.length) return `<p class="muted">No players yet</p>`;
+  return (
+    `<ul class="roster">` +
+    players
+      .map(
+        (p, i) =>
+          `<li>${
+            which === 'te'
+              ? `<span class="editpl" data-editpl="${which}:${i}">#${p.num} ${esc(p.name || '')}</span>`
+              : `#${p.num} ${esc(p.name || '')}`
+          }<button data-rm="${which}:${i}" class="rm">×</button></li>`,
+      )
+      .join('') +
+    `</ul>`
+  );
+}
+```
+
+Becomes:
+```js
+function renderRoster(players, which) {
+  if (!players.length) return `<p class="muted">No players yet</p>`;
+  if (which === 'te') {
+    return (
+      `<ul class="list">` +
+      players
+        .map(
+          (p, i) => `
+        <li class="listrow">
+          <span class="listmain">#${p.num} ${esc(p.name || '')}</span>
+          <button data-editbtn="${which}:${i}">Edit</button>
+          <button data-rm="${which}:${i}" class="danger">Delete</button>
+        </li>`,
+        )
+        .join('') +
+      `</ul>`
+    );
+  }
+  return (
+    `<ul class="roster">` +
+    players
+      .map(
+        (p, i) =>
+          `<li>#${p.num} ${esc(p.name || '')}<button data-rm="${which}:${i}" class="rm">×</button></li>`,
+      )
+      .join('') +
+    `</ul>`
+  );
+}
+```
+
+The `which === 'my'`/`'opp'` path (used only by the Setup screen) is byte-identical to the original function's only branch — nothing changes there.
+
+In `renderTeamEditor`, remove this block entirely:
 ```js
 el_each('[data-editpl]', (b) =>
   b.addEventListener('dblclick', () => {
@@ -35,44 +90,37 @@ el_each('[data-editpl]', (b) =>
 );
 ```
 
-Becomes:
+### 3. Wiring for the new Edit/Delete buttons
+
+Current `[data-rm]` handler in `renderTeamEditor`:
 ```js
-el_each('[data-editpl]', (b) => {
-  let clickTimer = null;
-  b.addEventListener('click', () => {
-    if (clickTimer) {
-      clearTimeout(clickTimer);
-      clickTimer = null;
-      const [, i] = b.dataset.editpl.split(':'); // "te:i"
-      openRosterEditDialog(parseInt(i, 10));
-      return;
-    }
-    clickTimer = setTimeout(() => {
-      clickTimer = null;
-    }, 300);
-  });
-});
+el_each(
+  '[data-rm]',
+  (b) =>
+    (b.onclick = () => {
+      const [, i] = b.dataset.rm.split(':'); // "te:i"
+      d.players.splice(parseInt(i, 10), 1);
+      renderTeams();
+    }),
+);
 ```
 
-A lone click starts a 300ms timer that, if nothing follows, simply clears itself — no action (there is no single-click behavior for this element, unlike in-game player selection). A second click within the window cancels that timer and opens the dialog. This is the same "defer to disambiguate" technique already used for the MISS lock feature and the in-game player edit dialog, just without a single-click action to perform when the timer expires.
-
-### 2. Edit icon button
-
-Current (`renderRoster`, the `'te'` branch):
+Becomes (adds the confirmation):
 ```js
-which === 'te'
-  ? `<span class="editpl" data-editpl="${which}:${i}">#${p.num} ${esc(p.name || '')}</span>`
-  : `#${p.num} ${esc(p.name || '')}`
+el_each(
+  '[data-rm]',
+  (b) =>
+    (b.onclick = () => {
+      const [, i] = b.dataset.rm.split(':'); // "te:i"
+      const p = d.players[parseInt(i, 10)];
+      if (!confirm(`Remove #${p.num}${p.name ? ' ' + p.name : ''} from the roster?`)) return;
+      d.players.splice(parseInt(i, 10), 1);
+      renderTeams();
+    }),
+);
 ```
 
-Becomes:
-```js
-which === 'te'
-  ? `<span class="editpl" data-editpl="${which}:${i}">#${p.num} ${esc(p.name || '')}</span><button data-editbtn="${which}:${i}" class="editbtn">✎</button>`
-  : `#${p.num} ${esc(p.name || '')}`
-```
-
-The new button sits between the `.editpl` span and the existing `<button data-rm>` (which is appended outside this ternary, unconditionally) — so the row reads: player text, pencil icon, `×`. New wiring in `renderTeamEditor`:
+New, added immediately after it:
 ```js
 el_each('[data-editbtn]', (b) =>
   (b.onclick = () => {
@@ -82,7 +130,7 @@ el_each('[data-editbtn]', (b) =>
 );
 ```
 
-### 3. Focus-ring clipping fix
+### 4. Focus-ring clipping fix
 
 Current:
 ```css
@@ -101,59 +149,23 @@ Becomes:
 }
 ```
 
-### 4. Delete confirmation
+### CSS cleanup
 
-Current (`renderTeamEditor`):
-```js
-el_each(
-  '[data-rm]',
-  (b) =>
-    (b.onclick = () => {
-      const [, i] = b.dataset.rm.split(':'); // "te:i"
-      d.players.splice(parseInt(i, 10), 1);
-      renderTeams();
-    }),
-);
-```
-
-Becomes:
-```js
-el_each(
-  '[data-rm]',
-  (b) =>
-    (b.onclick = () => {
-      const [, i] = b.dataset.rm.split(':'); // "te:i"
-      const p = d.players[parseInt(i, 10)];
-      if (!confirm(`Remove #${p.num}${p.name ? ' ' + p.name : ''} from the roster?`)) return;
-      d.players.splice(parseInt(i, 10), 1);
-      renderTeams();
-    }),
-);
-```
-
-Matches the existing "Delete team" confirmation's style (a plain `confirm()` call, same file). The Setup screen's separate `[data-rm]` handler (`wireSetup()`) is a different code block entirely and is not touched.
-
-### `.editbtn` CSS
-
+Remove the now-unused rule (added in Cycle 21, no longer referenced by any markup after this change):
 ```css
-.editbtn {
-  border: none;
-  background: none;
-  color: var(--muted);
-  font-size: 1.1rem;
+.editpl {
+  cursor: pointer;
 }
 ```
 
-Mirrors `.rm`'s exact structure (no border/background, same font-size) but uses `var(--muted)` instead of `var(--danger)`, since this action isn't destructive.
-
 ## Testing
 
-All four changes are pure UI-interaction/markup/CSS — no pure-function logic changes, so no automated test coverage applies (matches the precedent set throughout this app's interaction code, e.g. the existing Activity dialog and MISS lock feature). Manual verification (deferred to the user, since this sandbox has no browser):
+All changes are pure UI-interaction/markup/CSS — no pure-function logic changes, so no automated test coverage applies (matches the precedent set throughout this app's interaction code). Manual verification (deferred to the user, since this sandbox has no browser):
 
-1. Double-clicking a player row in the Team Editor now reliably opens the Edit Player dialog (works the same way the in-game version already does).
-2. A single click on a player row does nothing (no-op), same as before.
-3. A pencil icon now appears between each player's text and the `×` button; tapping it opens the same Edit Player dialog.
-4. Clicking into either input field in the Edit Player dialog shows a complete, unclipped focus ring.
-5. Tapping `×` on a player in the Team Editor now shows a confirmation ("Remove #N Name from the roster?") before removing them; Cancel leaves the roster unchanged.
-6. The Setup screen's roster removal (before starting a game) is unaffected — no confirmation, no edit icon, no double-click behavior there.
-7. The existing "Delete team" confirmation and the overall Team Editor Save/Cancel flow are unaffected.
+1. The Team Editor's roster rows now look like the Teams tab's team list and the History tab's game list — a card-style row with the player's `#num name` on the left and "Edit"/"Delete" buttons on the right (Delete in red).
+2. Tapping "Edit" opens the Edit Player dialog, pre-filled, exactly as before.
+3. Double-clicking the player text no longer does anything (removed) — this is expected, not a regression, since "Edit" now covers that.
+4. Tapping "Delete" shows a confirmation ("Remove #N Name from the roster?"); confirming removes the player, Cancel leaves the roster unchanged.
+5. Clicking into either input field in the Edit Player dialog shows a complete, unclipped focus ring.
+6. The Setup screen's roster (before starting a game) is completely unaffected — same compact `#num name ×` style, no Edit button, no confirmation.
+7. The overall Team Editor Save/Cancel flow, and the Teams tab's own "Delete team" confirmation, are unaffected.
