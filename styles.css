@@ -326,13 +326,9 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 6px 8px;
-  background: #1f2937;
+  background: #111;
   color: #fff;
   font-size: 0.8rem;
-}
-
-.infobar.small {
-  background: #2b3442;
 }
 
 .infobar .tf {
