@@ -573,6 +573,7 @@ function loadAll() {
 const ALL_SECTIONS = ['nav', 'setup', 'teams', 'history', 'game', 'summary'];
 function showOnly(...visible) {
   for (const id of ALL_SECTIONS) document.getElementById(id).hidden = !visible.includes(id);
+  document.documentElement.classList.toggle('screen-game', visible.includes('game'));
 }
 
 function renderNav() {
@@ -1146,7 +1147,8 @@ function renderSummary() {
     share.onclick = () => {
       const text = buildSummaryText(g, leftTeam, rightTeam, deltas);
       const title = `${g.myTeam.name} vs ${g.oppTeam.name}`;
-      const filename = `${g.myTeam.name}-vs-${g.oppTeam.name}`.replace(/[^a-z0-9-]+/gi, '-') + '.txt';
+      const filename =
+        `${g.myTeam.name}-vs-${g.oppTeam.name}`.replace(/[^a-z0-9-]+/gi, '-') + '.txt';
       const file = new File([text], filename, { type: 'text/plain' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         navigator.share({ files: [file], title }).catch(() => {});

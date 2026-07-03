@@ -79,6 +79,13 @@ body {
   color: var(--text);
 }
 
+/* Game screen owns its own scroll regions (.col, .recent) — lock the page itself. */
+html.screen-game,
+html.screen-game body {
+  height: 100dvh;
+  overflow: hidden;
+}
+
 [hidden] {
   display: none !important;
 }
@@ -308,7 +315,7 @@ body {
 #game {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
 }
 
 .gh {
