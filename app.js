@@ -669,19 +669,18 @@ function renderSetup() {
 
   el.innerHTML = `
     ${banner}
-    <h1>HoopScore</h1>
     <section class="card">
       ${
         state.teams.length
           ? `
         <div class="my-team-row">
-          <h2>My Team</h2>
+          <h2>Team</h2>
           <select id="my-team-select">
             ${state.teams.map((t) => `<option value="${t.id}" ${t.id === d.myTeamId ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}
           </select>
         </div>
         <ul class="roster">${renderActiveRoster(d)}</ul>`
-          : `<h2>My Team</h2><p class="muted">No teams yet — create one from the Teams tab.</p>`
+          : `<h2>Team</h2><p class="muted">No teams yet — create one from the Teams tab.</p>`
       }
     </section>
 
@@ -811,15 +810,17 @@ function wireSetup() {
       d.activePlayerIds = t ? t.players.map((p) => p.id) : [];
       renderSetup();
     };
-  el_each('[data-active]', (cb) =>
-    (cb.onchange = () => {
-      const id = cb.dataset.active;
-      if (cb.checked) {
-        if (!d.activePlayerIds.includes(id)) d.activePlayerIds.push(id);
-      } else {
-        d.activePlayerIds = d.activePlayerIds.filter((x) => x !== id);
-      }
-    }),
+  el_each(
+    '[data-active]',
+    (cb) =>
+      (cb.onchange = () => {
+        const id = cb.dataset.active;
+        if (cb.checked) {
+          if (!d.activePlayerIds.includes(id)) d.activePlayerIds.push(id);
+        } else {
+          d.activePlayerIds = d.activePlayerIds.filter((x) => x !== id);
+        }
+      }),
   );
   $('opp-name') &&
     ($('opp-name').oninput = (e) => {
@@ -977,11 +978,13 @@ function renderTeamEditor(el) {
         renderTeams();
       }),
   );
-  el_each('[data-editbtn]', (b) =>
-    (b.onclick = () => {
-      const [, i] = b.dataset.editbtn.split(':'); // "te:i"
-      openRosterEditDialog(parseInt(i, 10));
-    }),
+  el_each(
+    '[data-editbtn]',
+    (b) =>
+      (b.onclick = () => {
+        const [, i] = b.dataset.editbtn.split(':'); // "te:i"
+        openRosterEditDialog(parseInt(i, 10));
+      }),
   );
   $('te-save').onclick = () => {
     if (!d.name.trim()) {
