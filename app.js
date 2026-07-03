@@ -685,7 +685,7 @@ function renderSetup() {
     </section>
 
     <section class="card">
-      <label>Opponent <input id="opp-name" value="${esc(d.oppName)}" placeholder="e.g. Celtics"></label>
+      <label class="opp-row">Opponent <input id="opp-name" value="${esc(d.oppName)}" placeholder="e.g. Celtics"></label>
       <div id="opp-players">${renderRoster(d.oppPlayers, 'opp')}</div>
       <div class="add-player">
         <input id="opp-add-num" type="number" inputmode="numeric" placeholder="#" class="num">
@@ -709,7 +709,7 @@ function renderSetup() {
       </div>
     </section>
 
-    <section class="card">
+    <section class="card start-card">
       <button id="btn-start-home" class="startbtn">Start</button>
       <p id="setup-error" class="error"></p>
     </section>

@@ -103,6 +103,10 @@ body {
   margin-bottom: 16px;
 }
 
+.start-card {
+  padding: 6px;
+}
+
 .card h2 {
   margin: 0 0 8px;
   font-size: 1rem;
@@ -135,6 +139,17 @@ body {
   border-radius: 8px;
   background: var(--input-bg);
   color: var(--text);
+}
+
+.opp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.opp-row input {
+  width: auto;
+  flex: 1;
 }
 
 .add-player {
