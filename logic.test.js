@@ -621,3 +621,83 @@ test('playerEff can be negative', () => {
   };
   assert.strictEqual(playerEff(p), -10);
 });
+
+// ===== buildSummaryText =====
+const { buildSummaryText } = app;
+
+function summaryFixtureGame() {
+  const g = newGame({
+    config: { halfLengthMin: 18, numHalves: 2, otLengthMin: 4, myTeamSide: 'home' },
+    myTeam: { id: 't1', name: 'Hawks', players: [{ id: 'p1', num: 5, name: 'Smith' }] },
+    oppTeam: { name: 'Eagles', players: [{ id: 'o1', num: 9, name: 'Jones' }] },
+  });
+  Object.assign(g.myTeam.players[0], {
+    pts: 10,
+    fgm: 4,
+    fga: 8,
+    tpm: 1,
+    tpa: 2,
+    ftm: 1,
+    fta: 2,
+    oreb: 2,
+    dreb: 3,
+    stl: 1,
+    blk: 0,
+    ast: 2,
+    to: 1,
+    pf: 2,
+    courtSecs: 600,
+  });
+  Object.assign(g.oppTeam.players[0], {
+    pts: 8,
+    fgm: 3,
+    fga: 7,
+    tpm: 0,
+    tpa: 1,
+    ftm: 2,
+    fta: 2,
+    oreb: 1,
+    dreb: 4,
+    stl: 0,
+    blk: 1,
+    ast: 1,
+    to: 2,
+    pf: 3,
+    courtSecs: 540,
+  });
+  g.score = { my: 10, opp: 8 };
+  g.periodScores = [{ my: 10, opp: 8 }];
+  g.log = [{ clockText: '5:30', period: 1, detail: 'Smith made 2PT' }];
+  return g;
+}
+
+test('buildSummaryText produces the full plain-text game summary', () => {
+  const g = summaryFixtureGame();
+  const deltas = g.periodScores.map((ps, i) => ({
+    my: i === 0 ? ps.my : ps.my - g.periodScores[i - 1].my,
+    opp: i === 0 ? ps.opp : ps.opp - g.periodScores[i - 1].opp,
+  }));
+  const text = buildSummaryText(g, 'my', 'opp', deltas);
+  const expected = [
+    'Hawks vs Eagles',
+    '',
+    'FINAL: Hawks 10 – 8 Eagles',
+    '',
+    'Scoring by period',
+    'H1 Total',
+    'Hawks: 10 10',
+    'Eagles: 8 8',
+    '',
+    'Hawks box score',
+    '#5 Smith: 10 PTS, 5/10 FG, 1/2 3PT, 1/2 FT, 2 OREB, 3 DREB, 5 REB, 1 STL, 0 BLK, 2 AST, 1 TO, 2 FLS, 10.0 MIN, 11 EFF',
+    'TOTAL: 10 PTS, 5/10 FG, 1/2 3PT, 1/2 FT, 2 OREB, 3 DREB, 5 REB, 1 STL, 0 BLK, 2 AST, 1 TO, 2 FLS, 10.0 MIN, 11 EFF',
+    '',
+    'Eagles box score',
+    '#9 Jones: 8 PTS, 3/8 FG, 0/1 3PT, 2/2 FT, 1 OREB, 4 DREB, 5 REB, 0 STL, 1 BLK, 1 AST, 2 TO, 3 FLS, 9.0 MIN, 8 EFF',
+    'TOTAL: 8 PTS, 3/8 FG, 0/1 3PT, 2/2 FT, 1 OREB, 4 DREB, 5 REB, 0 STL, 1 BLK, 1 AST, 2 TO, 3 FLS, 9.0 MIN, 8 EFF',
+    '',
+    'Game log',
+    '5:30 H1 – Smith made 2PT',
+  ].join('\n');
+  assert.strictEqual(text, expected);
+});

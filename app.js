@@ -532,6 +532,7 @@ if (typeof module !== 'undefined' && module.exports) {
     subOut,
     fmtMinutes,
     playerEff,
+    buildSummaryText,
   };
 }
 
@@ -1206,6 +1207,66 @@ function boxScore(team) {
       <td>${t.stl}</td><td>${t.blk}</td>
       <td>${t.ast}</td><td>${t.to}</td><td>${t.pf}</td><td>${fmtMinutes(t.courtSecs)}</td><td>${t.eff}</td></tr>`;
   return `<h2>${esc(team.name)}</h2><table class="bs"><thead><tr><th>Player</th>${cols.map((c) => `<th>${c}</th>`).join('')}</tr></thead><tbody>${rows}${total}</tbody></table>`;
+}
+
+function boxScoreText(team) {
+  const players = team.players.slice().sort((a, b) => a.num - b.num);
+  const playerLine = (label, p) =>
+    `${label}: ${p.pts} PTS, ${fmtShot(p.fgm + p.tpm, p.fga + p.tpa)} FG, ${fmtShot(p.tpm, p.tpa)} 3PT, ${fmtShot(p.ftm, p.fta)} FT, ${p.oreb} OREB, ${p.dreb} DREB, ${p.oreb + p.dreb} REB, ${p.stl} STL, ${p.blk} BLK, ${p.ast} AST, ${p.to} TO, ${p.pf} FLS, ${fmtMinutes(p.courtSecs)} MIN, ${playerEff(p)} EFF`;
+  const lines = [`${team.name} box score`];
+  players.forEach((p) => {
+    lines.push(playerLine(`#${p.num} ${p.name || ''}`.trim(), p));
+  });
+  const sum = (f) => players.reduce((n, p) => n + f(p), 0);
+  const t = {
+    pts: sum((p) => p.pts),
+    fgm: sum((p) => p.fgm),
+    fga: sum((p) => p.fga),
+    tpm: sum((p) => p.tpm),
+    tpa: sum((p) => p.tpa),
+    ftm: sum((p) => p.ftm),
+    fta: sum((p) => p.fta),
+    oreb: sum((p) => p.oreb),
+    dreb: sum((p) => p.dreb),
+    stl: sum((p) => p.stl),
+    blk: sum((p) => p.blk),
+    ast: sum((p) => p.ast),
+    to: sum((p) => p.to),
+    pf: sum((p) => p.pf),
+    courtSecs: sum((p) => p.courtSecs || 0),
+  };
+  lines.push(playerLine('TOTAL', t));
+  return lines.join('\n');
+}
+
+function buildSummaryText(g, leftTeam, rightTeam, deltas) {
+  const teamOf = (team) => (team === 'my' ? g.myTeam : g.oppTeam);
+  const lines = [];
+  lines.push(`${g.myTeam.name} vs ${g.oppTeam.name}`);
+  lines.push('');
+  lines.push(
+    `FINAL: ${teamName(g, leftTeam)} ${g.score[leftTeam]} – ${g.score[rightTeam]} ${teamName(g, rightTeam)}`,
+  );
+  lines.push('');
+  lines.push('Scoring by period');
+  const periodHeader = deltas.map((_, i) => periodLabel(i + 1, g.config.numHalves)).join(' ');
+  lines.push(`${periodHeader} Total`);
+  lines.push(
+    `${teamName(g, leftTeam)}: ${deltas.map((d) => d[leftTeam]).join(' ')} ${g.score[leftTeam]}`,
+  );
+  lines.push(
+    `${teamName(g, rightTeam)}: ${deltas.map((d) => d[rightTeam]).join(' ')} ${g.score[rightTeam]}`,
+  );
+  lines.push('');
+  lines.push(boxScoreText(teamOf(leftTeam)));
+  lines.push('');
+  lines.push(boxScoreText(teamOf(rightTeam)));
+  lines.push('');
+  lines.push('Game log');
+  g.log.forEach((e) => {
+    lines.push(`${e.clockText} ${periodLabel(e.period, g.config.numHalves)} – ${e.detail}`);
+  });
+  return lines.join('\n');
 }
 
 function newGameFromSummary() {
