@@ -680,13 +680,12 @@ function renderSetup() {
           </select>
         </div>
         <ul class="roster">${renderActiveRoster(d)}</ul>`
-          : `<h2>Team</h2><p class="muted">No teams yet — create one from the Teams tab.</p>`
+          : `<h2>Team</h2><p class="muted">Create a team on team tab.</p>`
       }
     </section>
 
     <section class="card">
-      <h2>Opponent</h2>
-      <label>Opponent name <input id="opp-name" value="${esc(d.oppName)}" placeholder="e.g. Celtics"></label>
+      <label>Opponent <input id="opp-name" value="${esc(d.oppName)}" placeholder="e.g. Celtics"></label>
       <div id="opp-players">${renderRoster(d.oppPlayers, 'opp')}</div>
       <div class="add-player">
         <input id="opp-add-num" type="number" inputmode="numeric" placeholder="#" class="num">
@@ -707,14 +706,6 @@ function renderSetup() {
       <div class="toggle">
         <button class="${d.myTeamSide === 'home' ? 'active' : ''}" data-side="home">Home</button>
         <button class="${d.myTeamSide === 'away' ? 'active' : ''}" data-side="away">Away</button>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>Theme</h2>
-      <div class="toggle">
-        <button class="${state.theme === 'dark' ? 'active' : ''}" data-theme-set="dark">Dark</button>
-        <button class="${state.theme === 'light' ? 'active' : ''}" data-theme-set="light">Light</button>
       </div>
     </section>
 
@@ -745,7 +736,7 @@ function renderActiveRoster(d) {
 }
 
 function renderRoster(players, which) {
-  if (!players.length) return `<p class="muted">No players yet</p>`;
+  if (!players.length) return `<p class="muted">Add players</p>`;
   if (which === 'te') {
     return (
       `<ul class="list">` +
@@ -896,7 +887,7 @@ function renderTeams() {
         </li>`,
         )
         .join('')
-    : `<p class="muted">No saved teams yet. Create one from New Game.</p>`;
+    : `<p class="muted">No saved teams yet.</p>`;
 
   el.innerHTML = `<h1>Teams</h1><button id="btn-add-team">+ Add Team</button><ul class="list">${rows}</ul>`;
 
