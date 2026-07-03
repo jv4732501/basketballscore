@@ -112,7 +112,7 @@ body {
 
 .card label {
   display: block;
-  margin: 8px 0;
+  margin: 2px 0;
   font-size: 0.9rem;
 }
 
@@ -150,7 +150,7 @@ body {
 .roster li {
   display: flex;
   justify-content: space-between;
-  padding: 6px 8px;
+  padding: 0px 0px;
   background: var(--surface-2);
   border-radius: 6px;
   margin-bottom: 4px;
