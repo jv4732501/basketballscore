@@ -635,9 +635,7 @@ let setupDraft = null;
 function defaultDraft() {
   return {
     myTeamId: state.teams[0]?.id ?? null,
-    newTeam: state.teams.length === 0, // first run forces "new team"
-    newTeamName: '',
-    myPlayers: state.teams[0] ? clone(state.teams[0].players) : [],
+    activePlayerIds: state.teams[0] ? state.teams[0].players.map((p) => p.id) : [],
     oppName: '',
     oppPlayers: [],
     halfLengthMin: 18,
@@ -679,19 +677,12 @@ function renderSetup() {
           ? `
         <label>Saved team
           <select id="my-team-select">
-            <option value="__new">+ New team</option>
-            ${state.teams.map((t) => `<option value="${t.id}" ${t.id === d.myTeamId && !d.newTeam ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}
+            ${state.teams.map((t) => `<option value="${t.id}" ${t.id === d.myTeamId ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}
           </select>
-        </label>`
-          : ''
+        </label>
+        <ul class="roster">${renderActiveRoster(d)}</ul>`
+          : `<p class="muted">No teams yet — create one from the Teams tab.</p>`
       }
-      ${d.newTeam ? `<label>Team name <input id="new-team-name" value="${esc(d.newTeamName)}" placeholder="e.g. Lakers"></label>` : ''}
-      <div id="my-players">${renderRoster(d.myPlayers, 'my')}</div>
-      <div class="add-player">
-        <input id="my-add-num" type="number" inputmode="numeric" placeholder="#" class="num">
-        <input id="my-add-name" placeholder="Name (optional)">
-        <button id="my-add-btn">Add</button>
-      </div>
     </section>
 
     <section class="card">
@@ -731,7 +722,7 @@ function renderSetup() {
     <section class="card">
       <h2>Who won the tip?</h2>
       <div class="tip-row">
-        <button class="tip" data-tip="my">${esc(d.newTeam ? d.newTeamName || 'My Team' : currentMyTeamName(d) || 'My Team')}</button>
+        <button class="tip" data-tip="my">${esc(currentMyTeamName(d) || 'My Team')}</button>
         <button class="tip" data-tip="opp">${esc(d.oppName || 'Opponent')}</button>
       </div>
       <button id="btn-start-home" class="startbtn">Start</button>
@@ -744,6 +735,19 @@ function renderSetup() {
 function currentMyTeamName(d) {
   const t = state.teams.find((x) => x.id === d.myTeamId);
   return t ? t.name : '';
+}
+
+function renderActiveRoster(d) {
+  const t = state.teams.find((x) => x.id === d.myTeamId);
+  if (!t || !t.players.length) return `<p class="muted">No players on this team yet.</p>`;
+  return t.players
+    .map(
+      (p) => `
+    <li>
+      <label><input type="checkbox" data-active="${p.id}" ${d.activePlayerIds.includes(p.id) ? 'checked' : ''}> #${p.num} ${esc(p.name || '')}</label>
+    </li>`,
+    )
+    .join('');
 }
 
 function renderRoster(players, which) {
@@ -802,31 +806,27 @@ function wireSetup() {
   const sel = $('my-team-select');
   if (sel)
     sel.onchange = () => {
-      if (sel.value === '__new') {
-        d.newTeam = true;
-        d.myTeamId = null;
-        d.myPlayers = [];
-      } else {
-        d.newTeam = false;
-        d.myTeamId = sel.value;
-        d.myPlayers = clone(state.teams.find((t) => t.id === sel.value).players);
-      }
+      d.myTeamId = sel.value;
+      const t = state.teams.find((x) => x.id === sel.value);
+      d.activePlayerIds = t ? t.players.map((p) => p.id) : [];
       renderSetup();
     };
-  $('new-team-name') &&
-    ($('new-team-name').oninput = (e) => {
-      d.newTeamName = e.target.value;
-    });
+  el_each('[data-active]', (cb) =>
+    (cb.onchange = () => {
+      const id = cb.dataset.active;
+      if (cb.checked) {
+        if (!d.activePlayerIds.includes(id)) d.activePlayerIds.push(id);
+      } else {
+        d.activePlayerIds = d.activePlayerIds.filter((x) => x !== id);
+      }
+    }),
+  );
   $('opp-name') &&
     ($('opp-name').oninput = (e) => {
       d.oppName = e.target.value;
     });
 
-  $('my-add-btn').onclick = () => addPlayer('my', $('my-add-num'), $('my-add-name'));
-  $('opp-add-btn').onclick = () => addPlayer('opp', $('opp-add-num'), $('opp-add-name'));
-  $('my-add-num').onkeydown = (e) => {
-    if (e.key === 'Enter') $('my-add-btn').click();
-  };
+  $('opp-add-btn').onclick = () => addPlayer($('opp-add-num'), $('opp-add-name'));
   $('opp-add-num').onkeydown = (e) => {
     if (e.key === 'Enter') $('opp-add-btn').click();
   };
@@ -861,8 +861,8 @@ function wireSetup() {
     '[data-rm]',
     (b) =>
       (b.onclick = () => {
-        const [which, i] = b.dataset.rm.split(':');
-        (which === 'my' ? d.myPlayers : d.oppPlayers).splice(parseInt(i, 10), 1);
+        const [, i] = b.dataset.rm.split(':');
+        d.oppPlayers.splice(parseInt(i, 10), 1);
         renderSetup();
       }),
   );
@@ -876,11 +876,10 @@ function el_each(sel, fn) {
   document.querySelectorAll(sel).forEach(fn);
 }
 
-function addPlayer(which, numEl, nameEl) {
+function addPlayer(numEl, nameEl) {
   const num = parseInt(numEl.value, 10);
   if (isNaN(num)) return;
-  const list = which === 'my' ? setupDraft.myPlayers : setupDraft.oppPlayers;
-  list.push({ id: makeLocalId(), num, name: nameEl.value.trim() });
+  setupDraft.oppPlayers.push({ id: makeLocalId(), num, name: nameEl.value.trim() });
   renderSetup();
 }
 
@@ -1060,29 +1059,20 @@ function openHistoryGame(id) {
 function startGame(tipWinner, startClock = true) {
   const d = setupDraft;
   const err = document.getElementById('setup-error');
-  const myName = d.newTeam ? d.newTeamName.trim() : currentMyTeamName(d);
-  if (!myName) {
-    err.textContent = 'Enter your team name.';
+  const myTeam = state.teams.find((t) => t.id === d.myTeamId);
+  if (!myTeam) {
+    err.textContent = 'Select a team from the Teams tab first.';
     return;
   }
   if (!d.oppName.trim()) {
     err.textContent = 'Enter the opponent name.';
     return;
   }
-
-  // Persist a new team to saved teams (or update the selected one)
-  let myTeamId = d.myTeamId;
-  if (d.newTeam) {
-    myTeamId = makeLocalId();
-    state.teams.push({ id: myTeamId, name: myName, players: clone(d.myPlayers) });
-  } else {
-    const t = state.teams.find((x) => x.id === myTeamId);
-    if (t) {
-      t.name = myName;
-      t.players = clone(d.myPlayers);
-    }
+  const activePlayers = myTeam.players.filter((p) => d.activePlayerIds.includes(p.id));
+  if (!activePlayers.length) {
+    err.textContent = 'Select at least one active player.';
+    return;
   }
-  saveTeams();
 
   let g = newGame({
     config: {
@@ -1091,7 +1081,7 @@ function startGame(tipWinner, startClock = true) {
       otLengthMin: d.otLengthMin,
       myTeamSide: d.myTeamSide,
     },
-    myTeam: { id: myTeamId, name: myName, players: d.myPlayers },
+    myTeam: { id: myTeam.id, name: myTeam.name, players: activePlayers },
     oppTeam: { name: d.oppName.trim(), players: d.oppPlayers },
   });
   g.id = makeLocalId();
