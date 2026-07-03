@@ -1390,6 +1390,7 @@ function wireGame() {
       (b.onclick = () => {
         addOpen = b.dataset.addopen;
         render();
+        document.querySelector(`[data-addnum="${addOpen}"]`).focus();
       }),
   );
   el_each(
