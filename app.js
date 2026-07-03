@@ -904,7 +904,12 @@ function renderTeams() {
         .join('')
     : `<p class="muted">No saved teams yet. Create one from New Game.</p>`;
 
-  el.innerHTML = `<h1>Teams</h1><ul class="list">${rows}</ul>`;
+  el.innerHTML = `<h1>Teams</h1><button id="btn-add-team">+ Add Team</button><ul class="list">${rows}</ul>`;
+
+  document.getElementById('btn-add-team').onclick = () => {
+    teamEdit = { id: makeLocalId(), name: '', players: [] };
+    renderTeams();
+  };
 
   el_each(
     '[data-edit-team]',
@@ -988,6 +993,8 @@ function renderTeamEditor(el) {
     if (t) {
       t.name = d.name.trim();
       t.players = clone(d.players);
+    } else {
+      state.teams.push({ id: d.id, name: d.name.trim(), players: clone(d.players) });
     }
     saveTeams();
     teamEdit = null;
