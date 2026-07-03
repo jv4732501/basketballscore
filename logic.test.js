@@ -701,3 +701,105 @@ test('buildSummaryText produces the full plain-text game summary', () => {
   ].join('\n');
   assert.strictEqual(text, expected);
 });
+
+function multiPlayerSummaryFixtureGame() {
+  const g = newGame({
+    config: { halfLengthMin: 18, numHalves: 2, otLengthMin: 4, myTeamSide: 'home' },
+    myTeam: {
+      id: 't1',
+      name: 'Hawks',
+      players: [
+        { id: 'p1', num: 7, name: 'Adams' },
+        { id: 'p2', num: 3, name: 'Baker' },
+      ],
+    },
+    oppTeam: { name: 'Eagles', players: [{ id: 'o1', num: 9, name: 'Jones' }] },
+  });
+  Object.assign(g.myTeam.players[0], {
+    pts: 6,
+    fgm: 3,
+    fga: 6,
+    tpm: 0,
+    tpa: 0,
+    ftm: 0,
+    fta: 0,
+    oreb: 1,
+    dreb: 2,
+    stl: 0,
+    blk: 0,
+    ast: 1,
+    to: 0,
+    pf: 1,
+    courtSecs: 300,
+  });
+  Object.assign(g.myTeam.players[1], {
+    pts: 4,
+    fgm: 2,
+    fga: 4,
+    tpm: 0,
+    tpa: 0,
+    ftm: 0,
+    fta: 0,
+    oreb: 0,
+    dreb: 1,
+    stl: 1,
+    blk: 0,
+    ast: 0,
+    to: 1,
+    pf: 0,
+    courtSecs: 300,
+  });
+  Object.assign(g.oppTeam.players[0], {
+    pts: 8,
+    fgm: 3,
+    fga: 7,
+    tpm: 0,
+    tpa: 1,
+    ftm: 2,
+    fta: 2,
+    oreb: 1,
+    dreb: 4,
+    stl: 0,
+    blk: 1,
+    ast: 1,
+    to: 2,
+    pf: 3,
+    courtSecs: 540,
+  });
+  g.score = { my: 10, opp: 8 };
+  g.periodScores = [{ my: 10, opp: 8 }];
+  g.log = [{ clockText: '5:30', period: 1, detail: 'Smith made 2PT' }];
+  return g;
+}
+
+test('buildSummaryText sorts players by number and sums box-score totals across multiple players', () => {
+  const g = multiPlayerSummaryFixtureGame();
+  const deltas = g.periodScores.map((ps, i) => ({
+    my: i === 0 ? ps.my : ps.my - g.periodScores[i - 1].my,
+    opp: i === 0 ? ps.opp : ps.opp - g.periodScores[i - 1].opp,
+  }));
+  const text = buildSummaryText(g, 'my', 'opp', deltas);
+  const expected = [
+    'Hawks vs Eagles',
+    '',
+    'FINAL: Hawks 10 – 8 Eagles',
+    '',
+    'Scoring by period',
+    'H1 Total',
+    'Hawks: 10 10',
+    'Eagles: 8 8',
+    '',
+    'Hawks box score',
+    '#3 Baker: 4 PTS, 2/4 FG, 0/0 3PT, 0/0 FT, 0 OREB, 1 DREB, 1 REB, 1 STL, 0 BLK, 0 AST, 1 TO, 0 FLS, 5.0 MIN, 3 EFF',
+    '#7 Adams: 6 PTS, 3/6 FG, 0/0 3PT, 0/0 FT, 1 OREB, 2 DREB, 3 REB, 0 STL, 0 BLK, 1 AST, 0 TO, 1 FLS, 5.0 MIN, 7 EFF',
+    'TOTAL: 10 PTS, 5/10 FG, 0/0 3PT, 0/0 FT, 1 OREB, 3 DREB, 4 REB, 1 STL, 0 BLK, 1 AST, 1 TO, 1 FLS, 10.0 MIN, 10 EFF',
+    '',
+    'Eagles box score',
+    '#9 Jones: 8 PTS, 3/8 FG, 0/1 3PT, 2/2 FT, 1 OREB, 4 DREB, 5 REB, 0 STL, 1 BLK, 1 AST, 2 TO, 3 FLS, 9.0 MIN, 8 EFF',
+    'TOTAL: 8 PTS, 3/8 FG, 0/1 3PT, 2/2 FT, 1 OREB, 4 DREB, 5 REB, 0 STL, 1 BLK, 1 AST, 2 TO, 3 FLS, 9.0 MIN, 8 EFF',
+    '',
+    'Game log',
+    '5:30 H1 – Smith made 2PT',
+  ].join('\n');
+  assert.strictEqual(text, expected);
+});
