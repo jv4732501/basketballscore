@@ -1917,17 +1917,20 @@ function init() {
 if (typeof document !== 'undefined') {
   document.addEventListener('DOMContentLoaded', init);
 
-  // No feature in this app uses double-tap, so unconditionally suppress iOS's
-  // native double-tap-to-zoom rather than rely on touch-action alone. Scoped to
-  // the same element so two fast taps on different buttons during play aren't
-  // mistaken for a double-tap and dropped.
+  // Suppress iOS's native double-tap-to-zoom rather than rely on touch-action
+  // alone. Buttons are exempt: the MISS lock toggle and the player edit dialog
+  // both use their own same-element double-click timers (neither re-renders
+  // between the two taps), so preventing their second touchend's click would
+  // break those features. Non-button double-taps (e.g. blank space) have no
+  // such feature to protect.
   let lastTouchEnd = 0;
   let lastTouchTarget = null;
   document.addEventListener(
     'touchend',
     (e) => {
       const now = Date.now();
-      if (now - lastTouchEnd <= 300 && e.target === lastTouchTarget) e.preventDefault();
+      if (now - lastTouchEnd <= 300 && e.target === lastTouchTarget && !e.target.closest('button'))
+        e.preventDefault();
       lastTouchEnd = now;
       lastTouchTarget = e.target;
     },
