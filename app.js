@@ -652,6 +652,10 @@ function makeLocalId() {
 function renderSetup() {
   if (!setupDraft) setupDraft = defaultDraft();
   const d = setupDraft;
+  if (!state.teams.some((t) => t.id === d.myTeamId)) {
+    d.myTeamId = state.teams[0]?.id ?? null;
+    d.activePlayerIds = state.teams[0] ? state.teams[0].players.map((p) => p.id) : [];
+  }
   const el = document.getElementById('setup');
   const resumable = isResumable(state.game);
   const banner = resumable
