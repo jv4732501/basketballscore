@@ -195,6 +195,8 @@ body {
 .roster li input[type='checkbox'] {
   margin: 0;
   flex-shrink: 0;
+  width: auto;
+  padding: 0;
 }
 
 .roster li label span {
