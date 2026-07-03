@@ -43,6 +43,28 @@
   --row-border: #f0f0f0;
 }
 
+@media print {
+  :root {
+    --bg: #ffffff;
+    --surface: #f5f5f5;
+    --surface-2: #ffffff;
+    --text: #111111;
+    --muted: #6b7280;
+    --border: #d1d5db;
+    --input-bg: #ffffff;
+    --input-border: #cccccc;
+    --accent: #f59e0b;
+    --accent-text: #ffffff;
+    --danger: #dc2626;
+    --resume-bg: #fff7ed;
+    --btn-bg: #ffffff;
+    --btn-text: #111111;
+    --popover-btn-bg: #e5e7eb;
+    --table-border: #dddddd;
+    --row-border: #f0f0f0;
+  }
+}
+
 html,
 body {
   margin: 0;
