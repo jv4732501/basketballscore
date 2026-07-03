@@ -492,6 +492,7 @@ html.screen-game body {
 .col {
   width: 23%;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 4px;
 }
 
@@ -622,6 +623,7 @@ html.screen-game body {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   font-size: 0.75rem;
   padding: 4px 8px;
   background: var(--surface-2);
