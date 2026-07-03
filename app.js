@@ -1414,7 +1414,7 @@ function renderPlayers(g, team) {
 
 function renderControls(g) {
   const recent = g.log
-    .slice(-10)
+    .slice()
     .reverse()
     .map(
       (e) =>
