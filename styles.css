@@ -1,5 +1,6 @@
 * {
   box-sizing: border-box;
+  touch-action: manipulation;
 }
 
 /* ===== Theme variables — dark is the default (:root); light overrides ===== */
