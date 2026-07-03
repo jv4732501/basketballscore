@@ -867,6 +867,7 @@ function addPlayer(numEl, nameEl) {
   if (isNaN(num)) return;
   setupDraft.oppPlayers.push({ id: makeLocalId(), num, name: nameEl.value.trim() });
   renderSetup();
+  document.getElementById('opp-add-num').focus();
 }
 
 function renderTeams() {
@@ -947,6 +948,7 @@ function renderTeamEditor(el) {
     if (isNaN(num)) return;
     d.players.push({ id: makeLocalId(), num, name: $('te-add-name').value.trim() });
     renderTeams();
+    document.getElementById('te-add-num').focus();
   };
   $('te-add-btn').onclick = add;
   $('te-add-num').onkeydown = (e) => {
