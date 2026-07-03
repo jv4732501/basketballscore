@@ -1109,7 +1109,7 @@ function renderSummary() {
 
   document.getElementById('summary').innerHTML = `
     <div class="sum-actions no-print">
-      <button id="sum-print">Save PDF</button>
+      <button id="sum-print">Print</button>
       <button id="sum-share" ${typeof navigator.share === 'function' ? '' : 'hidden'}>Share</button>
       <button id="sum-new">New Game</button>
     </div>

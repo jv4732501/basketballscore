@@ -15,7 +15,6 @@
   --accent: #3b82f6;
   --accent-text: #1a1a1a;
   --danger: #f87171;
-  --pl-sel-bg: rgba(245, 158, 11, 0.18);
   --resume-bg: #2a2112;
   --btn-bg: #262c38;
   --btn-text: #f3f4f6;
@@ -36,7 +35,6 @@
   --accent: #f59e0b;
   --accent-text: #ffffff;
   --danger: #dc2626;
-  --pl-sel-bg: #fff7ed;
   --resume-bg: #fff7ed;
   --btn-bg: #ffffff;
   --btn-text: #111111;
@@ -480,7 +478,6 @@ body {
 
 .pl.sel {
   border-color: var(--accent);
-  background: var(--pl-sel-bg);
 }
 
 .addbtn {
