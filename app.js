@@ -1497,6 +1497,7 @@ function addGamePlayerFromForm(team) {
       saveTeams();
     }
   }
+  document.querySelector(`[data-addnum="${team}"]`).focus();
 }
 
 function recordSelectedStat(stat, opts = {}) {
