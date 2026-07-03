@@ -1143,13 +1143,17 @@ function renderSummary() {
   document.getElementById('sum-print').onclick = () => window.print();
   const share = document.getElementById('sum-share');
   if (share && !share.hidden)
-    share.onclick = () =>
-      navigator
-        .share({
-          title: `${g.myTeam.name} vs ${g.oppTeam.name}`,
-          text: `${g.myTeam.name} ${g.score.my} – ${g.score.opp} ${g.oppTeam.name}`,
-        })
-        .catch(() => {});
+    share.onclick = () => {
+      const text = buildSummaryText(g, leftTeam, rightTeam, deltas);
+      const title = `${g.myTeam.name} vs ${g.oppTeam.name}`;
+      const filename = `${g.myTeam.name}-vs-${g.oppTeam.name}`.replace(/[^a-z0-9-]+/gi, '-') + '.txt';
+      const file = new File([text], filename, { type: 'text/plain' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title }).catch(() => {});
+      } else {
+        navigator.share({ title, text }).catch(() => {});
+      }
+    };
   document.getElementById('sum-new').onclick = newGameFromSummary;
 }
 
