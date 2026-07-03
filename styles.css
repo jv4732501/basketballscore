@@ -421,7 +421,7 @@ body {
   background: var(--btn-bg);
   color: var(--btn-text);
   border-radius: 6px;
-  height: 26px;
+  height: 32px;
 }
 
 .period-ctl {
@@ -438,14 +438,15 @@ body {
   background: var(--btn-bg);
   color: var(--btn-text);
   border-radius: 6px;
-  height: 26px;
+  height: 32px;
 }
 
 .tfadj {
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   line-height: 1;
+  font-size: 1.1rem;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--btn-bg);
