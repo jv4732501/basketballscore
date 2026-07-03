@@ -217,8 +217,8 @@ body {
   margin-top: 8px;
   padding: 12px;
   font-weight: 600;
-  background: var(--btn-bg);
-  color: var(--btn-text);
+  background: #16a34a;
+  color: #fff;
   border: 1px solid var(--border);
   border-radius: 8px;
 }

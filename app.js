@@ -719,11 +719,6 @@ function renderSetup() {
     </section>
 
     <section class="card">
-      <h2>Who won the tip?</h2>
-      <div class="tip-row">
-        <button class="tip" data-tip="my">${esc(currentMyTeamName(d) || 'My Team')}</button>
-        <button class="tip" data-tip="opp">${esc(d.oppName || 'Opponent')}</button>
-      </div>
       <button id="btn-start-home" class="startbtn">Start</button>
       <p id="setup-error" class="error"></p>
     </section>
@@ -867,8 +862,7 @@ function wireSetup() {
         renderSetup();
       }),
   );
-  el_each('[data-tip]', (b) => (b.onclick = () => startGame(b.dataset.tip)));
-  // "Start" skips the tip: possession goes to whichever team is on the home side.
+  // Home team gets initial possession; clock stays stopped until manually started.
   const sb = document.getElementById('btn-start-home');
   if (sb) sb.onclick = () => startGame(d.myTeamSide === 'home' ? 'my' : 'opp', false);
 }
