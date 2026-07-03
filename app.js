@@ -1392,6 +1392,8 @@ function teamName(g, team) {
 function renderPlayers(g, team) {
   const t = team === 'my' ? g.myTeam : g.oppTeam;
   const rows = t.players
+    .slice()
+    .sort((a, b) => a.num - b.num)
     .map(
       (p) => `
     <button class="pl ${g.selectedPlayerId === p.id ? 'sel' : ''}" data-pl="${team}:${p.id}">
