@@ -696,8 +696,8 @@ function renderSetup() {
 
     <details class="card">
       <summary>Settings</summary>
-      <label>Half length (min) <input id="half-len" type="number" value="${d.halfLengthMin}"></label>
-      <label>Number of halves <input id="num-halves" type="number" value="${d.numHalves}"></label>
+      <label>Period length (min) <input id="half-len" type="number" value="${d.halfLengthMin}"></label>
+      <label>Number of periods <input id="num-halves" type="number" value="${d.numHalves}"></label>
       <label>OT length (min) <input id="ot-len" type="number" value="${d.otLengthMin}"></label>
     </details>
 
