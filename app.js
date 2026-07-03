@@ -744,7 +744,7 @@ function renderActiveRoster(d) {
     .map(
       (p) => `
     <li>
-      <label><input type="checkbox" data-active="${p.id}" ${d.activePlayerIds.includes(p.id) ? 'checked' : ''}> #${p.num} ${esc(p.name || '')}</label>
+      <label><input type="checkbox" data-active="${p.id}" ${d.activePlayerIds.includes(p.id) ? 'checked' : ''}><span>#${p.num} ${esc(p.name || '')}</span></label>
     </li>`,
     )
     .join('');
