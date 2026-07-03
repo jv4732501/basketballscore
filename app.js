@@ -671,17 +671,17 @@ function renderSetup() {
     ${banner}
     <h1>HoopScore</h1>
     <section class="card">
-      <h2>My Team</h2>
       ${
         state.teams.length
           ? `
-        <label>Saved team
+        <div class="my-team-row">
+          <h2>My Team</h2>
           <select id="my-team-select">
             ${state.teams.map((t) => `<option value="${t.id}" ${t.id === d.myTeamId ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}
           </select>
-        </label>
+        </div>
         <ul class="roster">${renderActiveRoster(d)}</ul>`
-          : `<p class="muted">No teams yet — create one from the Teams tab.</p>`
+          : `<h2>My Team</h2><p class="muted">No teams yet — create one from the Teams tab.</p>`
       }
     </section>
 
