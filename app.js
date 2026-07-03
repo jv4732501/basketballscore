@@ -1357,10 +1357,10 @@ function renderGame() {
     </header>
 
     <div class="infobar">
-      <span class="tf"><span class="statlbl" data-actlog="fouls:${leftTeam}">FOULS: ${tf[leftTeam]}</span>
+      <span class="tf"><span class="statlbl" data-actlog="fouls:${leftTeam}">FS: ${tf[leftTeam]}</span>
         <button class="tfadj" data-tf="${leftTeam}:-1" ${g.teamFouls[leftTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-tf="${leftTeam}:1">+</button> ${bonusBadge(leftTeam)}</span>
-      <button id="poss">POS: ${g.possession === leftTeam ? '◀' : '▶'}</button>
-      <span class="tf"><span class="statlbl" data-actlog="fouls:${rightTeam}">FOULS: ${tf[rightTeam]}</span>
+      <button id="poss">POS:${g.possession === leftTeam ? '◀' : '▶'}</button>
+      <span class="tf"><span class="statlbl" data-actlog="fouls:${rightTeam}">FS: ${tf[rightTeam]}</span>
         <button class="tfadj" data-tf="${rightTeam}:-1" ${g.teamFouls[rightTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-tf="${rightTeam}:1">+</button> ${bonusBadge(rightTeam)}</span>
     </div>
     <div class="infobar small">
