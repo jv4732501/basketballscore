@@ -156,6 +156,17 @@ body {
   margin-bottom: 4px;
 }
 
+.roster li label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.roster li input[type='checkbox'] {
+  margin: 0;
+}
+
 .toggle,
 .tip-row {
   display: flex;
