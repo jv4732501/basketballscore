@@ -1916,4 +1916,21 @@ function init() {
 // ===== BOOTSTRAP (browser only; Node ignores) =====
 if (typeof document !== 'undefined') {
   document.addEventListener('DOMContentLoaded', init);
+
+  // No feature in this app uses double-tap, so unconditionally suppress iOS's
+  // native double-tap-to-zoom rather than rely on touch-action alone. Scoped to
+  // the same element so two fast taps on different buttons during play aren't
+  // mistaken for a double-tap and dropped.
+  let lastTouchEnd = 0;
+  let lastTouchTarget = null;
+  document.addEventListener(
+    'touchend',
+    (e) => {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300 && e.target === lastTouchTarget) e.preventDefault();
+      lastTouchEnd = now;
+      lastTouchTarget = e.target;
+    },
+    { passive: false },
+  );
 }
