@@ -2295,6 +2295,11 @@ function openHelpDialog() {
         <li>UNDO reverses the last action.</li>
         <li>Collapse a team's panel (below its Add button) to make the shared stat buttons bigger when you're only scoring one team.</li>
         <li>Double-tap either H/A badge to swap Home/Away.</li>
+        <li>Mark players as Starters (green toggle, Teams tab) — at the start of each period you'll be asked to sub your starters in.</li>
+        <li>Set a per-period clock warning time in Setup → Settings — the clock turns orange once you're under it.</li>
+        <li>Fouls turn orange at the bonus and red at the double bonus.</li>
+        <li>Tap Review on a History row to see that game's box score again, with Print and Share available there too.</li>
+        <li>Tap Share on a saved team (Teams tab) to send its roster to another coach as a QR code or link.</li>
         <li>Export/Import backups from Setup if you need to clear your browser data without losing teams or history.</li>
       </ul>
       <p>This app works best added to your Home Screen as a standalone app — no browser toolbar, and it checks for updates automatically.</p>
