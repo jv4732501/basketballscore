@@ -545,6 +545,45 @@ function validateBackup(obj) {
   };
 }
 
+function mergeBackup(state, backup) {
+  const teams = state.teams.slice();
+  let teamsAdded = 0;
+  let teamsUpdated = 0;
+  for (const t of backup.teams) {
+    const i = teams.findIndex((x) => x.id === t.id);
+    if (i >= 0) {
+      teams[i] = t;
+      teamsUpdated += 1;
+    } else {
+      teams.push(t);
+      teamsAdded += 1;
+    }
+  }
+  let history = state.history;
+  let gamesAdded = 0;
+  let gamesUpdated = 0;
+  for (const g of backup.history) {
+    if (history.some((x) => x.id === g.id)) gamesUpdated += 1;
+    else gamesAdded += 1;
+    history = upsertHistory(history, g);
+  }
+  let game = state.game;
+  let gameRestored = false;
+  let gameSkipped = false;
+  if (backup.game) {
+    if (isResumable(state.game)) {
+      gameSkipped = true;
+    } else {
+      game = backup.game;
+      gameRestored = true;
+    }
+  }
+  return {
+    state: { teams, history, game },
+    summary: { teamsAdded, teamsUpdated, gamesAdded, gamesUpdated, gameRestored, gameSkipped },
+  };
+}
+
 // ===== EXPORT SHIM (test runner only; browser ignores) =====
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -581,6 +620,7 @@ if (typeof module !== 'undefined' && module.exports) {
     isResumable,
     buildBackup,
     validateBackup,
+    mergeBackup,
     migrateGame,
     upsertHistory,
     removeFromHistory,

@@ -890,3 +890,103 @@ test('validateBackup defaults missing fields and migrates legacy games', () => {
   assert.strictEqual('reb' in v2.backup.history[0].myTeam.players[0], false);
   assert.strictEqual(v2.backup.game.myTeam.players[0].dreb, 3);
 });
+
+const { mergeBackup } = app;
+
+test('export/import round-trip: backup restores an empty browser exactly', () => {
+  const team = { id: 't1', name: 'Mine', players: [{ id: 'p1', num: 5, name: 'Smith' }] };
+  const done = endGame(startClock(freshGame(), 1000), 61000);
+  const src = { teams: [team], history: [done], game: null };
+  const parsed = deserialize(serialize(buildBackup(src, 99000)));
+  const v = validateBackup(parsed);
+  assert.strictEqual(v.ok, true);
+  const { state: merged, summary } = mergeBackup({ teams: [], history: [], game: null }, v.backup);
+  assert.deepStrictEqual(merged.teams, src.teams);
+  assert.deepStrictEqual(merged.history, src.history);
+  assert.strictEqual(merged.game, null);
+  assert.deepStrictEqual(summary, {
+    teamsAdded: 1,
+    teamsUpdated: 0,
+    gamesAdded: 1,
+    gamesUpdated: 0,
+    gameRestored: false,
+    gameSkipped: false,
+  });
+});
+
+test('mergeBackup upserts by id: file wins on conflict, nothing local deleted', () => {
+  const local = {
+    teams: [
+      { id: 't1', name: 'Old Name', players: [] },
+      { id: 't2', name: 'Local Only', players: [] },
+    ],
+    history: [
+      { id: 'g1', tag: 'local' },
+      { id: 'g2', tag: 'local-only' },
+    ],
+    game: null,
+  };
+  const backup = {
+    teams: [
+      { id: 't1', name: 'New Name', players: [] },
+      { id: 't3', name: 'File Only', players: [] },
+    ],
+    history: [
+      { id: 'g1', tag: 'file' },
+      { id: 'g3', tag: 'file-only' },
+    ],
+    game: null,
+  };
+  const { state: merged, summary } = mergeBackup(local, backup);
+  assert.strictEqual(merged.teams.length, 3);
+  assert.strictEqual(merged.teams.find((t) => t.id === 't1').name, 'New Name');
+  assert.strictEqual(merged.teams.find((t) => t.id === 't2').name, 'Local Only');
+  assert.strictEqual(merged.history.length, 3);
+  assert.strictEqual(merged.history.find((g) => g.id === 'g1').tag, 'file');
+  assert.deepStrictEqual(summary, {
+    teamsAdded: 1,
+    teamsUpdated: 1,
+    gamesAdded: 1,
+    gamesUpdated: 1,
+    gameRestored: false,
+    gameSkipped: false,
+  });
+  assert.strictEqual(local.teams.length, 2); // input state not mutated
+  assert.strictEqual(local.history.length, 2);
+});
+
+test('mergeBackup never clobbers a live local game, restores otherwise', () => {
+  const fileGame = freshGame(); // screen: 'game' → resumable
+  // no local game → restored
+  let r = mergeBackup(
+    { teams: [], history: [], game: null },
+    { teams: [], history: [], game: fileGame },
+  );
+  assert.deepStrictEqual(r.state.game, fileGame);
+  assert.strictEqual(r.summary.gameRestored, true);
+  assert.strictEqual(r.summary.gameSkipped, false);
+  // local live game → file's game skipped, local kept
+  const liveLocal = freshGame();
+  r = mergeBackup(
+    { teams: [], history: [], game: liveLocal },
+    { teams: [], history: [], game: fileGame },
+  );
+  assert.strictEqual(r.state.game, liveLocal);
+  assert.strictEqual(r.summary.gameRestored, false);
+  assert.strictEqual(r.summary.gameSkipped, true);
+  // local game exists but is on the summary screen (not resumable) → file wins
+  const finished = endGame(freshGame(), 1000);
+  r = mergeBackup(
+    { teams: [], history: [], game: finished },
+    { teams: [], history: [], game: fileGame },
+  );
+  assert.deepStrictEqual(r.state.game, fileGame);
+  assert.strictEqual(r.summary.gameRestored, true);
+  // backup has no game → local untouched either way
+  r = mergeBackup(
+    { teams: [], history: [], game: liveLocal },
+    { teams: [], history: [], game: null },
+  );
+  assert.strictEqual(r.state.game, liveLocal);
+  assert.strictEqual(r.summary.gameSkipped, false);
+});
