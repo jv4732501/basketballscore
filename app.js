@@ -928,10 +928,7 @@ function wireSetup() {
     ($('btn-export').onclick = () => {
       const json = serialize(buildBackup(state, Date.now()));
       const filename = `hoopscore-backup-${new Date().toISOString().slice(0, 10)}.json`;
-      const file = new File([json], filename, { type: 'application/json' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        navigator.share({ files: [file], title: 'HoopScore backup' }).catch(() => {});
-      } else {
+      const download = () => {
         const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
         const a = document.createElement('a');
         a.href = url;
@@ -941,6 +938,14 @@ function wireSetup() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+      };
+      const file = new File([json], filename, { type: 'application/json' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: 'HoopScore backup' }).catch((e) => {
+          if (e.name !== 'AbortError') download();
+        });
+      } else {
+        download();
       }
     });
 
