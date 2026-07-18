@@ -1591,7 +1591,7 @@ function renderGame() {
   el.innerHTML = `
     <header class="gh">
       <div class="tn">${esc(teamName(g, leftTeam))} ${sideBadge(myLeft ? 'home' : 'away')}</div>
-      <div class="period">${periodLabel(g.period, g.config.numHalves)}</div>
+      <button id="poss">POS:${g.possession === leftTeam ? '◀' : '▶'}</button>
       <div class="tn">${esc(teamName(g, rightTeam))} ${sideBadge(myLeft ? 'away' : 'home')}</div>
 
       <div class="clockrow">
@@ -1610,7 +1610,7 @@ function renderGame() {
         <div class="sc" data-actlog="score:${leftTeam}">${g.score[leftTeam]}</div>
         <div class="adj"><button data-adj="${leftTeam}:-1" ${g.score[leftTeam] === 0 ? 'disabled' : ''}>−</button><button data-adj="${leftTeam}:1">+</button></div>
       </div>
-      <button id="poss">POS:${g.possession === leftTeam ? '◀' : '▶'}</button>
+      <div class="period">${periodLabel(g.period, g.config.numHalves)}</div>
       <div class="sc-row">
         <div class="sc" data-actlog="score:${rightTeam}">${g.score[rightTeam]}</div>
         <div class="adj"><button data-adj="${rightTeam}:-1" ${g.score[rightTeam] === 0 ? 'disabled' : ''}>−</button><button data-adj="${rightTeam}:1">+</button></div>
