@@ -1591,43 +1591,41 @@ function renderGame() {
   el.innerHTML = `
     <header class="gh">
       <div class="tn">${esc(teamName(g, leftTeam))} ${sideBadge(myLeft ? 'home' : 'away')}</div>
+      <div class="period">${periodLabel(g.period, g.config.numHalves)}</div>
+      <div class="tn">${esc(teamName(g, rightTeam))} ${sideBadge(myLeft ? 'away' : 'home')}</div>
+
       <div class="clockrow">
         <div id="clock-display" class="cd">${fmtClock(clockRemaining(g.clock, Date.now()))}</div>
         <button class="clkstep" data-clk="-1">−</button>
         <button class="clkstep" data-clk="1">+</button>
       </div>
-      <div class="tn">${esc(teamName(g, rightTeam))} ${sideBadge(myLeft ? 'away' : 'home')}</div>
+      <div class="cbtns"><button id="clk-toggle" class="${g.clock.running ? 'stop' : 'start'}">${g.clock.running ? 'STOP' : 'START'}</button></div>
+      <div class="period-ctl">${
+        g.period < g.config.numHalves
+          ? `<button id="btn-endhalf">END PERIOD</button>`
+          : `<button id="btn-endgame">END GAME</button><button id="btn-ot">+OT</button>`
+      }</div>
 
       <div class="sc-row">
         <div class="sc" data-actlog="score:${leftTeam}">${g.score[leftTeam]}</div>
         <div class="adj"><button data-adj="${leftTeam}:-1" ${g.score[leftTeam] === 0 ? 'disabled' : ''}>−</button><button data-adj="${leftTeam}:1">+</button></div>
       </div>
-      <div class="period">${periodLabel(g.period, g.config.numHalves)}</div>
+      <button id="poss">POS:${g.possession === leftTeam ? '◀' : '▶'}</button>
       <div class="sc-row">
         <div class="sc" data-actlog="score:${rightTeam}">${g.score[rightTeam]}</div>
         <div class="adj"><button data-adj="${rightTeam}:-1" ${g.score[rightTeam] === 0 ? 'disabled' : ''}>−</button><button data-adj="${rightTeam}:1">+</button></div>
       </div>
-
-      <div></div>
-      <div class="cbtns"><button id="clk-toggle" class="${g.clock.running ? 'stop' : 'start'}">${g.clock.running ? 'STOP' : 'START'}</button></div>
-      <div></div>
     </header>
 
     <div class="infobar">
       <span class="tf"><span class="statlbl" data-actlog="fouls:${leftTeam}">FS: ${foulNum(leftTeam)}</span>
         <button class="tfadj" data-tf="${leftTeam}:-1" ${g.teamFouls[leftTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-tf="${leftTeam}:1">+</button></span>
-      <button id="poss">POS:${g.possession === leftTeam ? '◀' : '▶'}</button>
       <span class="tf"><span class="statlbl" data-actlog="fouls:${rightTeam}">FS: ${foulNum(rightTeam)}</span>
         <button class="tfadj" data-tf="${rightTeam}:-1" ${g.teamFouls[rightTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-tf="${rightTeam}:1">+</button></span>
     </div>
     <div class="infobar small">
       <span class="tf"><span class="statlbl" data-actlog="to:${leftTeam}">TO: ${g.timeouts[leftTeam]}</span>
         <button class="tfadj" data-to="${leftTeam}:-1" ${g.timeouts[leftTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-to="${leftTeam}:1">+</button></span>
-      <span class="period-ctl">${
-        g.period < g.config.numHalves
-          ? `<button id="btn-endhalf">END PERIOD</button>`
-          : `<button id="btn-endgame">END GAME</button><button id="btn-ot">+OT</button>`
-      }</span>
       <span class="tf"><span class="statlbl" data-actlog="to:${rightTeam}">TO: ${g.timeouts[rightTeam]}</span>
         <button class="tfadj" data-to="${rightTeam}:-1" ${g.timeouts[rightTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-to="${rightTeam}:1">+</button></span>
     </div>
