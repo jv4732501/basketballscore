@@ -626,11 +626,20 @@ html.screen-game body {
 }
 
 .plhdr {
-  display: block;
+  display: flex;
+  flex-direction: column;
   font-weight: 600;
+}
+
+.plhdr .pnum,
+.plhdr .pname {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.plhdr .pname {
+  font-size: 1.1em;
 }
 
 .pl {
