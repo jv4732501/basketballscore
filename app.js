@@ -1037,15 +1037,23 @@ function wireSetup() {
     ($('opp-name').oninput = (e) => {
       d.oppName = e.target.value;
       const match = findTeamByName(d.oppName);
+      const prev = d.oppTeamId;
       if (match) {
-        d.oppTeamId = match.id;
-        d.activeOppPlayerIds = match.players.map((p) => p.id);
+        if (d.oppTeamId !== match.id) {
+          d.oppTeamId = match.id;
+          d.activeOppPlayerIds = match.players.map((p) => p.id);
+        }
       } else if (d.oppTeamId !== null) {
         d.oppTeamId = null;
         d.activeOppPlayerIds = [];
         d.oppPlayers = [];
       }
-      renderSetup();
+      if (d.oppTeamId !== prev) {
+        renderSetup();
+        const inp = $('opp-name');
+        inp.focus();
+        inp.setSelectionRange(inp.value.length, inp.value.length);
+      }
     });
 
   $('opp-add-btn') &&

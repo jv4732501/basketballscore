@@ -84,6 +84,21 @@ test('newGame builds initial state keyed by identity', () => {
   assert.strictEqual('dreb' in g.oppTeam.players[0], true);
 });
 
+test('newGame omits oppTeam.id when not provided, includes it when provided', () => {
+  const base = {
+    config: { halfLengthMin: 18, numHalves: 2, otLengthMin: 4, myTeamSide: 'home' },
+    myTeam: { id: 'mine', name: 'Mine', players: [] },
+  };
+  const withoutId = newGame({ ...base, oppTeam: { name: 'Freeform Opp', players: [] } });
+  assert.strictEqual('id' in withoutId.oppTeam, false);
+
+  const withId = newGame({
+    ...base,
+    oppTeam: { id: 'saved-team-1', name: 'Linked Opp', players: [] },
+  });
+  assert.strictEqual(withId.oppTeam.id, 'saved-team-1');
+});
+
 const { clockRemaining, startClock, stopClock, toggleClock, adjustClock } = app;
 
 function freshGame() {
