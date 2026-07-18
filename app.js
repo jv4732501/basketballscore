@@ -1047,10 +1047,12 @@ function wireSetup() {
       renderSetup();
     });
 
-  $('opp-add-btn').onclick = () => addPlayer($('opp-add-num'), $('opp-add-name'));
-  $('opp-add-num').onkeydown = (e) => {
-    if (e.key === 'Enter') $('opp-add-btn').click();
-  };
+  $('opp-add-btn') &&
+    ($('opp-add-btn').onclick = () => addPlayer($('opp-add-num'), $('opp-add-name')));
+  $('opp-add-num') &&
+    ($('opp-add-num').onkeydown = (e) => {
+      if (e.key === 'Enter') $('opp-add-btn').click();
+    });
 
   for (const len of ['half-len', 'num-halves', 'ot-len']) {
     const map = { 'half-len': 'halfLengthMin', 'num-halves': 'numHalves', 'ot-len': 'otLengthMin' };
