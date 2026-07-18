@@ -854,3 +854,39 @@ test('buildBackup includes an in-progress game when present', () => {
   assert.deepStrictEqual(b.game, g);
   assert.notStrictEqual(b.game, g); // copy, not the same reference
 });
+
+const { validateBackup } = app;
+
+test('validateBackup rejects non-backups, bad shapes, and newer versions', () => {
+  for (const bad of [null, 42, 'x', {}, { app: 'other' }]) {
+    const r = validateBackup(bad);
+    assert.strictEqual(r.ok, false);
+    assert.match(r.reason, /Not a HoopScore backup/);
+  }
+  const newer = validateBackup({ app: 'hoopscore', formatVersion: 2 });
+  assert.strictEqual(newer.ok, false);
+  assert.match(newer.reason, /newer version/);
+  assert.strictEqual(validateBackup({ app: 'hoopscore', teams: 'nope' }).ok, false);
+  assert.strictEqual(validateBackup({ app: 'hoopscore', history: {} }).ok, false);
+});
+
+test('validateBackup defaults missing fields and migrates legacy games', () => {
+  const v = validateBackup({ app: 'hoopscore', formatVersion: 1 });
+  assert.strictEqual(v.ok, true);
+  assert.deepStrictEqual(v.backup.teams, []);
+  assert.deepStrictEqual(v.backup.history, []);
+  assert.strictEqual(v.backup.game, null);
+
+  const legacy = clone(freshGame());
+  legacy.myTeam.players[0].reb = 3; // legacy single-rebound field
+  const v2 = validateBackup({
+    app: 'hoopscore',
+    formatVersion: 1,
+    history: [legacy],
+    game: clone(legacy),
+  });
+  assert.strictEqual(v2.ok, true);
+  assert.strictEqual(v2.backup.history[0].myTeam.players[0].dreb, 3);
+  assert.strictEqual('reb' in v2.backup.history[0].myTeam.players[0], false);
+  assert.strictEqual(v2.backup.game.myTeam.players[0].dreb, 3);
+});

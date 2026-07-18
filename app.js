@@ -527,6 +527,24 @@ function buildBackup(state, nowMs) {
   };
 }
 
+function validateBackup(obj) {
+  const notBackup = { ok: false, reason: 'Not a HoopScore backup file.' };
+  if (!obj || typeof obj !== 'object' || obj.app !== 'hoopscore') return notBackup;
+  if (typeof obj.formatVersion === 'number' && obj.formatVersion > 1)
+    return { ok: false, reason: 'This backup was made by a newer version of HoopScore.' };
+  const teams = obj.teams ?? [];
+  const history = obj.history ?? [];
+  if (!Array.isArray(teams) || !Array.isArray(history)) return notBackup;
+  return {
+    ok: true,
+    backup: {
+      teams,
+      history: history.map((g) => migrateGame(g)),
+      game: obj.game ? migrateGame(obj.game) : null,
+    },
+  };
+}
+
 // ===== EXPORT SHIM (test runner only; browser ignores) =====
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -562,6 +580,7 @@ if (typeof module !== 'undefined' && module.exports) {
     deserialize,
     isResumable,
     buildBackup,
+    validateBackup,
     migrateGame,
     upsertHistory,
     removeFromHistory,
