@@ -647,9 +647,11 @@ function fromBase64Url(str) {
 }
 
 function encodeTeamForShare(team) {
+  // Compact wire format (short keys, arrays not objects) to keep the QR code as
+  // small/low-density as possible — every byte here costs QR capacity/scannability.
   const payload = {
-    name: team.name,
-    players: team.players.map((p) => ({ num: p.num, name: p.name, starter: !!p.starter })),
+    n: team.name,
+    p: team.players.map((p) => [p.num, p.name, p.starter ? 1 : 0]),
   };
   return toBase64Url(JSON.stringify(payload));
 }
@@ -662,22 +664,17 @@ function decodeSharedTeam(str) {
   } catch {
     return fail;
   }
-  if (
-    !obj ||
-    typeof obj !== 'object' ||
-    typeof obj.name !== 'string' ||
-    !Array.isArray(obj.players)
-  )
+  if (!obj || typeof obj !== 'object' || typeof obj.n !== 'string' || !Array.isArray(obj.p))
     return fail;
-  const players = obj.players
-    .filter((p) => p && typeof p === 'object' && typeof p.num === 'number')
+  const players = obj.p
+    .filter((p) => Array.isArray(p) && typeof p[0] === 'number')
     .map((p) => ({
       id: makeLocalId(),
-      num: p.num,
-      name: typeof p.name === 'string' ? p.name : '',
-      starter: !!p.starter,
+      num: p[0],
+      name: typeof p[1] === 'string' ? p[1] : '',
+      starter: !!p[2],
     }));
-  return { ok: true, team: { id: makeLocalId(), name: obj.name.trim() || 'Shared Team', players } };
+  return { ok: true, team: { id: makeLocalId(), name: obj.n.trim() || 'Shared Team', players } };
 }
 
 // ===== EXPORT SHIM (test runner only; browser ignores) =====
@@ -2264,7 +2261,18 @@ function openShareTeamDialog(teamId) {
   `;
   document.body.appendChild(back);
   document.body.appendChild(dlg);
-  new QRCode(document.getElementById('qr-canvas'), { text: url, width: 220, height: 220 });
+  try {
+    new QRCode(document.getElementById('qr-canvas'), {
+      text: url,
+      width: 260,
+      height: 260,
+      correctLevel: QRCode.CorrectLevel.L, // lowest error-correction = highest data capacity;
+      // this code is scanned once immediately, not exposed to wear, so redundancy isn't needed
+    });
+  } catch {
+    document.getElementById('qr-canvas').innerHTML =
+      '<p class="muted">This roster is too large to fit in a QR code — use Share Link instead.</p>';
+  }
   document.getElementById('share-team-close').onclick = closeActivityDialog;
   const linkBtn = document.getElementById('share-team-link');
   if (linkBtn) {

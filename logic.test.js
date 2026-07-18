@@ -1179,6 +1179,34 @@ test('encodeTeamForShare/decodeSharedTeam round-trips non-ASCII names', () => {
   assert.strictEqual(result.team.players[0].name, 'José');
 });
 
+test('encodeTeamForShare keeps a realistic full roster small enough for a scannable QR code', () => {
+  // A roster this size previously produced a payload that exceeded the QR
+  // library's default (high error-correction) capacity, causing QR generation
+  // to throw and the scan to report "no usable data found". The compact
+  // array-based wire format (short keys, no repeated property names per
+  // player) must keep this well under a size that stays reliably scannable.
+  const team = {
+    id: 't1',
+    name: 'Kaukauna JV2 Basketball',
+    players: Array.from({ length: 15 }, (_, i) => ({
+      id: `p${i}`,
+      num: i + 1,
+      name: `Player Lastname${i}`,
+      starter: i < 5,
+    })),
+  };
+  const encoded = encodeTeamForShare(team);
+  assert.ok(
+    encoded.length < 1000,
+    `encoded length ${encoded.length} is too large for a compact QR`,
+  );
+
+  const result = decodeSharedTeam(encoded);
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(result.team.players.length, 15);
+  assert.strictEqual(result.team.players[14].name, 'Player Lastname14');
+});
+
 test('decodeSharedTeam rejects garbage input', () => {
   assert.strictEqual(decodeSharedTeam('not-valid-base64!!!').ok, false);
   assert.strictEqual(decodeSharedTeam('').ok, false);
@@ -1187,8 +1215,8 @@ test('decodeSharedTeam rejects garbage input', () => {
 test('decodeSharedTeam drops corrupted player entries and defaults a missing name', () => {
   // Hand-craft a payload with a bad player entry mixed with a valid one missing a name
   const raw = JSON.stringify({
-    name: 'Team',
-    players: [null, 7, { num: 5 }, { num: 'x', name: 'Bad Num' }],
+    n: 'Team',
+    p: [null, 7, [5], ['x', 'Bad Num']],
   });
   const b64 = Buffer.from(raw, 'utf8')
     .toString('base64')
