@@ -380,7 +380,8 @@ html.screen-game body {
   text-align: center;
 }
 
-.sc-row {
+.sc-row,
+.poss-row {
   display: flex;
   align-items: center;
   justify-content: center;
