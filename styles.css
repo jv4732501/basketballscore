@@ -408,6 +408,10 @@ html.screen-game body {
   font-variant-numeric: tabular-nums;
 }
 
+.cd.warn {
+  color: #fb923c;
+}
+
 .clockrow {
   display: flex;
   align-items: center;

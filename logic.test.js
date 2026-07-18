@@ -46,6 +46,26 @@ test('periodLabel', () => {
   assert.strictEqual(periodLabel(4, 2), 'OT2');
 });
 
+const { defaultWarnSecs, warnSecsFor } = app;
+
+test('defaultWarnSecs: only the final period defaults to 60, others 30', () => {
+  assert.deepStrictEqual(defaultWarnSecs(1), [60]);
+  assert.deepStrictEqual(defaultWarnSecs(2), [30, 60]);
+  assert.deepStrictEqual(defaultWarnSecs(4), [30, 30, 30, 60]);
+});
+
+test('warnSecsFor looks up the threshold for the current period, clamping OT to the last entry', () => {
+  const config = { warnSecs: [30, 60] };
+  assert.strictEqual(warnSecsFor(config, 1), 30);
+  assert.strictEqual(warnSecsFor(config, 2), 60);
+  assert.strictEqual(warnSecsFor(config, 3), 60); // OT reuses last regular period's value
+  assert.strictEqual(warnSecsFor(config, 4), 60);
+});
+
+test('warnSecsFor falls back to 30 when warnSecs is missing', () => {
+  assert.strictEqual(warnSecsFor({}, 1), 30);
+});
+
 test('bonusState thresholds', () => {
   assert.strictEqual(bonusState(6), 'none');
   assert.strictEqual(bonusState(7), 'bonus');

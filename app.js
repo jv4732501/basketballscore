@@ -32,6 +32,17 @@ function periodLabel(period, numHalves) {
   return period <= numHalves ? 'P' + period : 'OT' + (period - numHalves);
 }
 
+function defaultWarnSecs(numHalves) {
+  return Array.from({ length: numHalves }, (_, i) => (i === numHalves - 1 ? 60 : 30));
+}
+
+function warnSecsFor(config, period) {
+  const arr = config.warnSecs;
+  if (!arr || !arr.length) return 30;
+  const idx = Math.min(period, arr.length) - 1;
+  return arr[idx];
+}
+
 const BONUS = 7,
   DOUBLE_BONUS = 10;
 function bonusState(fouls) {
@@ -631,6 +642,8 @@ if (typeof module !== 'undefined' && module.exports) {
     clone,
     emptyMyStats,
     periodLabel,
+    defaultWarnSecs,
+    warnSecsFor,
     bonusState,
     fmtClock,
     parseClock,
@@ -800,6 +813,7 @@ function defaultDraft() {
     halfLengthMin: 18,
     numHalves: 2,
     otLengthMin: 4,
+    warnSecs: defaultWarnSecs(2),
     myTeamSide: 'home',
   };
 }
@@ -872,6 +886,9 @@ function renderSetup() {
       <label>Period length (min) <input id="half-len" type="number" value="${d.halfLengthMin}"></label>
       <label>Number of periods <input id="num-halves" type="number" value="${d.numHalves}"></label>
       <label>OT length (min) <input id="ot-len" type="number" value="${d.otLengthMin}"></label>
+      <div id="warn-secs-list">
+        ${d.warnSecs.map((s, i) => `<label>P${i + 1} warning (sec) <input type="number" data-warn-idx="${i}" value="${s}"></label>`).join('')}
+      </div>
     </details>
 
     <section class="card">
@@ -1065,13 +1082,29 @@ function wireSetup() {
       renderSetup();
     };
 
-  for (const len of ['half-len', 'num-halves', 'ot-len']) {
-    const map = { 'half-len': 'halfLengthMin', 'num-halves': 'numHalves', 'ot-len': 'otLengthMin' };
+  for (const len of ['half-len', 'ot-len']) {
+    const map = { 'half-len': 'halfLengthMin', 'ot-len': 'otLengthMin' };
     $(len) &&
       ($(len).oninput = (e) => {
         d[map[len]] = parseInt(e.target.value, 10) || d[map[len]];
       });
   }
+  $('num-halves') &&
+    ($('num-halves').onchange = (e) => {
+      const n = parseInt(e.target.value, 10);
+      if (!n || n < 1) return;
+      d.numHalves = n;
+      d.warnSecs = defaultWarnSecs(n);
+      renderSetup();
+    });
+  el_each(
+    '[data-warn-idx]',
+    (b) =>
+      (b.oninput = (e) => {
+        const i = parseInt(b.dataset.warnIdx, 10);
+        d.warnSecs[i] = parseInt(e.target.value, 10) || d.warnSecs[i];
+      }),
+  );
 
   el_each(
     '[data-side]',
@@ -1321,6 +1354,7 @@ function startGame(tipWinner, startClock = true) {
       halfLengthMin: d.halfLengthMin,
       numHalves: d.numHalves,
       otLengthMin: d.otLengthMin,
+      warnSecs: d.warnSecs,
       myTeamSide: d.myTeamSide,
     },
     myTeam: { id: myTeam.id, name: myTeam.name, players: activePlayers },
@@ -1559,7 +1593,9 @@ function startTick() {
     if (!g || g.screen !== 'game') return stopTick();
     if (g.clock.running) {
       const rem = clockRemaining(g.clock, Date.now());
-      document.getElementById('clock-display').textContent = fmtClock(rem);
+      const el = document.getElementById('clock-display');
+      el.textContent = fmtClock(rem);
+      el.classList.toggle('warn', rem < warnSecsFor(g.config, g.period));
       if (rem <= 0) commit((game, now) => stopClock(game, now)); // auto-stop at 0:00
     }
   }, 250);
@@ -1587,13 +1623,15 @@ function renderGame() {
   const rightTeam = myLeft ? 'opp' : 'my';
   const sideBadge = (side) =>
     `<button class="badge side" data-swap-sides title="Double-tap to swap Home/Away">${side === 'home' ? 'H' : 'A'}</button>`;
+  const clockRem = clockRemaining(g.clock, Date.now());
+  const clockWarn = clockRem < warnSecsFor(g.config, g.period);
 
   el.innerHTML = `
     <header class="gh">
       <div class="tn">${esc(teamName(g, leftTeam))} ${sideBadge(myLeft ? 'home' : 'away')}</div>
       <div class="clockrow">
         <button class="clkstep" data-clk="-1">−</button>
-        <div id="clock-display" class="cd">${fmtClock(clockRemaining(g.clock, Date.now()))}</div>
+        <div id="clock-display" class="cd${clockWarn ? ' warn' : ''}">${fmtClock(clockRem)}</div>
         <button class="clkstep" data-clk="1">+</button>
       </div>
       <div class="tn">${esc(teamName(g, rightTeam))} ${sideBadge(myLeft ? 'away' : 'home')}</div>
