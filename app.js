@@ -1514,7 +1514,7 @@ function renderGame() {
   el.innerHTML = `
     <header class="gh">
       <div class="score-box">
-        <div class="tn">${esc(teamName(g, leftTeam))}</div>
+        <div class="tn">${esc(teamName(g, leftTeam))} <button id="btn-swap-sides" class="swapbtn" title="Swap Home/Away">⇄</button></div>
         <div class="sc" data-actlog="score:${leftTeam}">${g.score[leftTeam]}</div>
         <div class="adj"><button data-adj="${leftTeam}:-1" ${g.score[leftTeam] === 0 ? 'disabled' : ''}>−</button><button data-adj="${leftTeam}:1">+</button></div>
       </div>
@@ -1695,6 +1695,8 @@ function wireGame() {
   });
 
   $('poss') && ($('poss').onclick = () => commit((game, now) => togglePossession(game, now)));
+  $('btn-swap-sides') &&
+    ($('btn-swap-sides').onclick = () => commit((game, now) => swapHomeAway(game, now)));
   $('clk-toggle') &&
     ($('clk-toggle').onclick = () => commit((game, now) => toggleClock(game, now)));
   el_each('[data-clk]', (b) => attachClockPress(b));
