@@ -1251,6 +1251,10 @@ function startGame(tipWinner, startClock = true) {
     err.textContent = 'Select a second team from the Teams tab first.';
     return;
   }
+  if (oppTeam.id === myTeam.id) {
+    err.textContent = 'Team 1 and Team 2 must be different.';
+    return;
+  }
   const activeOppPlayers = oppTeam.players.filter((p) => d.activeOppPlayerIds.includes(p.id));
   if (!activeOppPlayers.length) {
     err.textContent = 'Select at least one active player for Team 2.';
