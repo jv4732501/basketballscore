@@ -1400,7 +1400,7 @@ function renderSummary(g, readOnly) {
     <div class="sum-actions no-print">
       <button id="sum-print">Print</button>
       <button id="sum-share" ${typeof navigator.share === 'function' ? '' : 'hidden'}>Share</button>
-      ${readOnly ? `<button id="sum-back">Back</button>` : `<button id="sum-new">New Game</button>`}
+      ${readOnly ? `<button id="sum-back">Back</button>` : `<button id="sum-new">Home</button>`}
     </div>
     <h1>Final</h1>
     <div class="final">
