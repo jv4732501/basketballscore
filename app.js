@@ -745,6 +745,7 @@ let collapsedTeam = null; // 'my' | 'opp' | null — which player column is coll
 let missArm = false; // when true, the next shot tap records a miss, then disarms
 let missLock = false; // when true, MISS stays armed across shots until double-clicked off
 let flashKey = null; // key of the grid button to flash blue on the next render, or null
+let lastPlayerClick = null; // { id, at } | null — double-click-to-edit detection for player buttons
 
 // --- Setup screen state (draft, lives only while on setup) ---
 let setupDraft = null;
@@ -1228,6 +1229,7 @@ function openHistoryGame(id) {
   state.game = reopenGame(entry);
   addOpen = null;
   collapsedTeam = null;
+  lastPlayerClick = null;
   missArm = false;
   missLock = false;
   saveGame();
@@ -1281,6 +1283,7 @@ function startGame(tipWinner, startClock = true) {
   setupDraft = null;
   addOpen = null;
   collapsedTeam = null;
+  lastPlayerClick = null;
   missArm = false;
   missLock = false;
   saveGame();
@@ -1907,8 +1910,7 @@ function openStatMenu(anchorBtn, stat) {
 function attachPlayerPress(btn) {
   const [team, id] = btn.dataset.pl.split(':');
   let timer = null,
-    longFired = false,
-    clickTimer = null;
+    longFired = false;
   const start = () => {
     longFired = false;
     timer = setTimeout(() => {
@@ -1934,18 +1936,20 @@ function attachPlayerPress(btn) {
       longFired = false;
       return;
     }
-    if (clickTimer) {
-      clearTimeout(clickTimer);
-      clickTimer = null;
+    // Double-click-to-edit is detected via a module-level timestamp rather than a
+    // closure-local timer: selection now applies immediately (no delay), and render()
+    // tears down/rewires this button on every click, so a per-closure timer wouldn't
+    // survive from the first click to the second anyway.
+    const now = Date.now();
+    if (lastPlayerClick && lastPlayerClick.id === id && now - lastPlayerClick.at < 300) {
+      lastPlayerClick = null;
       openPlayerEditDialog(team, id);
       return;
     }
-    clickTimer = setTimeout(() => {
-      clickTimer = null;
-      state.game.selectedPlayerId = state.game.selectedPlayerId === id ? null : id;
-      saveGame();
-      render();
-    }, 300);
+    lastPlayerClick = { id, at: now };
+    state.game.selectedPlayerId = state.game.selectedPlayerId === id ? null : id;
+    saveGame();
+    render();
   };
 }
 
