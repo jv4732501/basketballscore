@@ -1519,11 +1519,12 @@ function renderGame() {
   const myLeft = g.config.myTeamSide === 'home';
   const leftTeam = myLeft ? 'my' : 'opp';
   const rightTeam = myLeft ? 'opp' : 'my';
+  const sideBadge = (side) => `<span class="badge side">${side === 'home' ? 'H' : 'A'}</span>`;
 
   el.innerHTML = `
     <header class="gh">
       <div class="score-box">
-        <div class="tn">${esc(teamName(g, leftTeam))} <button id="btn-swap-sides" class="swapbtn" title="Swap Home/Away">⇄</button></div>
+        <div class="tn">${esc(teamName(g, leftTeam))} ${sideBadge(myLeft ? 'home' : 'away')} <button id="btn-swap-sides" class="swapbtn" title="Swap Home/Away">⇄</button></div>
         <div class="sc" data-actlog="score:${leftTeam}">${g.score[leftTeam]}</div>
         <div class="adj"><button data-adj="${leftTeam}:-1" ${g.score[leftTeam] === 0 ? 'disabled' : ''}>−</button><button data-adj="${leftTeam}:1">+</button></div>
       </div>
@@ -1537,7 +1538,7 @@ function renderGame() {
         <div class="cbtns"><button id="clk-toggle" class="${g.clock.running ? 'stop' : 'start'}">${g.clock.running ? 'STOP' : 'START'}</button></div>
       </div>
       <div class="score-box">
-        <div class="tn">${esc(teamName(g, rightTeam))}</div>
+        <div class="tn">${esc(teamName(g, rightTeam))} ${sideBadge(myLeft ? 'away' : 'home')}</div>
         <div class="sc" data-actlog="score:${rightTeam}">${g.score[rightTeam]}</div>
         <div class="adj"><button data-adj="${rightTeam}:-1" ${g.score[rightTeam] === 0 ? 'disabled' : ''}>−</button><button data-adj="${rightTeam}:1">+</button></div>
       </div>

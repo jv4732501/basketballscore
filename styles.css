@@ -498,6 +498,11 @@ html.screen-game body {
   color: #fff;
 }
 
+.badge.side {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
 .court {
   display: flex;
   flex: 1;
