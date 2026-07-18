@@ -570,7 +570,7 @@ html.screen-game body {
 .addpl input {
   width: 100%;
   padding: 6px;
-  font-size: 0.85rem;
+  font-size: 1rem;
   border: 1px solid var(--input-border);
   border-radius: 6px;
   background: var(--input-bg);
