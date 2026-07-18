@@ -998,7 +998,7 @@ test('validateBackup rejects non-backups, bad shapes, and newer versions', () =>
   for (const bad of [null, 42, 'x', {}, { app: 'other' }]) {
     const r = validateBackup(bad);
     assert.strictEqual(r.ok, false);
-    assert.match(r.reason, /Not a HoopScore backup/);
+    assert.match(r.reason, /Not a Basketball Score backup/);
   }
   const newer = validateBackup({ app: 'hoopscore', formatVersion: 2 });
   assert.strictEqual(newer.ok, false);

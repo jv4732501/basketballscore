@@ -1,4 +1,4 @@
-# HoopScore (single-file basketball scorer)
+# Basketball Score (single-file basketball scorer)
 
 Static app: `index.html` + `styles.css` + `app.js`. No build, no dependencies.
 

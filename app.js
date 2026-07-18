@@ -579,10 +579,10 @@ function buildBackup(state, nowMs) {
 }
 
 function validateBackup(obj) {
-  const notBackup = { ok: false, reason: 'Not a HoopScore backup file.' };
+  const notBackup = { ok: false, reason: 'Not a Basketball Score backup file.' };
   if (!obj || typeof obj !== 'object' || obj.app !== 'hoopscore') return notBackup;
   if (typeof obj.formatVersion === 'number' && obj.formatVersion > 1)
-    return { ok: false, reason: 'This backup was made by a newer version of HoopScore.' };
+    return { ok: false, reason: 'This backup was made by a newer version of Basketball Score.' };
   const teams = obj.teams ?? [];
   const history = obj.history ?? [];
   if (!Array.isArray(teams) || !Array.isArray(history)) return notBackup;
@@ -1035,7 +1035,7 @@ function wireSetup() {
   $('btn-export') &&
     ($('btn-export').onclick = () => {
       const json = serialize(buildBackup(state, Date.now()));
-      const filename = `hoopscore-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      const filename = `basketball-score-backup-${new Date().toISOString().slice(0, 10)}.json`;
       const download = () => {
         const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
         const a = document.createElement('a');
@@ -2269,7 +2269,7 @@ function openShareTeamDialog(teamId) {
   const linkBtn = document.getElementById('share-team-link');
   if (linkBtn) {
     linkBtn.onclick = () => {
-      navigator.share({ title: `HoopScore team: ${t.name}`, url }).catch(() => {});
+      navigator.share({ title: `Basketball Score team: ${t.name}`, url }).catch(() => {});
     };
   }
 }
@@ -2285,7 +2285,7 @@ function openHelpDialog() {
       ? `<button class="dlgclose" id="help-share">Share / Add to Home Screen</button>`
       : '';
   dlg.innerHTML = `
-    <h3>How to use HoopScore</h3>
+    <h3>How to use Basketball Score</h3>
     <div class="dlgbody">
       <ul class="helplist">
         <li>Tap a player to select them, then tap a stat button (2PT, 3PT, REB, etc.) to record it.</li>
@@ -2313,7 +2313,7 @@ function openHelpDialog() {
   const shareEl = dlg.querySelector('#help-share');
   if (shareEl) {
     shareEl.onclick = () => {
-      navigator.share({ title: 'HoopScore', url: location.href }).catch(() => {});
+      navigator.share({ title: 'Basketball Score', url: location.href }).catch(() => {});
     };
   }
 }
