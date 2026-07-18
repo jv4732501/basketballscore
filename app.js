@@ -1603,11 +1603,7 @@ function renderGame() {
         <button class="clkstep" data-clk="1">+</button>
       </div>
       <div class="cbtns"><button id="clk-toggle" class="${g.clock.running ? 'stop' : 'start'}">${g.clock.running ? 'STOP' : 'START'}</button></div>
-      <div class="period-ctl">${
-        g.period < g.config.numHalves
-          ? `<button id="btn-endhalf">END PERIOD</button>`
-          : `<button id="btn-endgame">END GAME</button><button id="btn-ot">+OT</button>`
-      }</div>
+      <div></div>
 
       <div class="sc-row">
         <div class="sc" data-actlog="score:${leftTeam}">${g.score[leftTeam]}</div>
@@ -1629,6 +1625,11 @@ function renderGame() {
     <div class="infobar small">
       <span class="tf"><span class="statlbl" data-actlog="to:${leftTeam}">TO: ${g.timeouts[leftTeam]}</span>
         <button class="tfadj" data-to="${leftTeam}:-1" ${g.timeouts[leftTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-to="${leftTeam}:1">+</button></span>
+      <span class="period-ctl">${
+        g.period < g.config.numHalves
+          ? `<button id="btn-endhalf">END PERIOD</button>`
+          : `<button id="btn-endgame">END GAME</button><button id="btn-ot">+OT</button>`
+      }</span>
       <span class="tf"><span class="statlbl" data-actlog="to:${rightTeam}">TO: ${g.timeouts[rightTeam]}</span>
         <button class="tfadj" data-to="${rightTeam}:-1" ${g.timeouts[rightTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-to="${rightTeam}:1">+</button></span>
     </div>
