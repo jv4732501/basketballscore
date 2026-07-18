@@ -1571,9 +1571,9 @@ function renderGame() {
     </div>
 
     <div class="court">
-      <div class="col${collapsedTeam === leftTeam ? ' collapsed' : ''}">${renderPlayers(g, leftTeam)}</div>
+      <div class="col${colClass(leftTeam, rightTeam)}">${renderPlayers(g, leftTeam)}</div>
       <div class="controls">${renderControls(g)}</div>
-      <div class="col${collapsedTeam === rightTeam ? ' collapsed' : ''}">${renderPlayers(g, rightTeam)}</div>
+      <div class="col${colClass(rightTeam, leftTeam)}">${renderPlayers(g, rightTeam)}</div>
     </div>
   `;
   wireGame();
@@ -1582,6 +1582,12 @@ function renderGame() {
 
 function teamName(g, team) {
   return team === 'my' ? g.myTeam.name : g.oppTeam.name;
+}
+
+function colClass(team, otherTeam) {
+  if (collapsedTeam === team) return ' collapsed';
+  if (collapsedTeam === otherTeam) return ' wide';
+  return '';
 }
 
 function renderPlayers(g, team) {
