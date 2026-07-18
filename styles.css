@@ -466,6 +466,11 @@ html.screen-game body {
   gap: 4px;
 }
 
+.statlbl {
+  display: inline-block;
+  min-width: 6ch;
+}
+
 .infobar .tf:last-child {
   justify-content: flex-end;
 }
