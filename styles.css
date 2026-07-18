@@ -404,10 +404,12 @@ html.screen-game body {
 }
 
 .adj button {
-  width: 32px;
-  height: 32px;
-  margin: 0 2px;
+  width: 44px;
+  height: 44px;
+  margin: 0 3px;
   padding: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
   line-height: 1;
   border: 1px solid var(--border);
   background: var(--btn-bg);
@@ -444,8 +446,11 @@ html.screen-game body {
 }
 
 .cbtns button {
-  padding: 6px 10px;
+  padding: 14px 18px;
   margin: 2px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  min-width: 92px;
 }
 
 #clk-toggle {
@@ -607,11 +612,11 @@ html.screen-game body {
 }
 
 .pl {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
 }
 
 .pl .pp {
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   color: var(--muted);
   white-space: nowrap;
 }
@@ -624,7 +629,7 @@ html.screen-game body {
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: 8px 6px;
+  padding: 13px 8px;
   margin-bottom: 4px;
   border: 2px solid var(--border);
   border-radius: 8px;
