@@ -153,6 +153,8 @@ html.screen-game body {
 
 .my-team-row h2 {
   margin: 0;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .card label {
