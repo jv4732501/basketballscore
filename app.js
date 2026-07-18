@@ -70,7 +70,7 @@ function newGame({ config, myTeam, oppTeam }) {
       })),
     },
     oppTeam: {
-      id: oppTeam.id,
+      ...(oppTeam.id !== undefined && { id: oppTeam.id }),
       name: oppTeam.name,
       players: oppTeam.players.map((p) => ({
         id: p.id,
@@ -493,10 +493,6 @@ function migrateGame(game) {
   };
   if (game.myTeam && game.myTeam.players) game.myTeam.players = game.myTeam.players.map(fix);
   if (game.oppTeam && game.oppTeam.players) game.oppTeam.players = game.oppTeam.players.map(fix);
-  // Ensure oppTeam.id exists (may be undefined after deserialize since JSON drops undefined values)
-  if (game.oppTeam && !('id' in game.oppTeam)) {
-    game.oppTeam = { id: undefined, ...game.oppTeam };
-  }
   delete game.makeMode;
   return game;
 }
@@ -526,23 +522,7 @@ function serialize(value) {
 }
 function deserialize(str) {
   try {
-    const obj = str == null ? null : JSON.parse(str);
-    // Normalize oppTeam.id which may be missing after JSON round-trip
-    if (obj && typeof obj === 'object') {
-      if (obj.oppTeam && !('id' in obj.oppTeam)) {
-        obj.oppTeam = { id: undefined, ...obj.oppTeam };
-      }
-      // Also normalize games in history arrays (backups)
-      if (Array.isArray(obj.history)) {
-        obj.history = obj.history.map((g) => {
-          if (g && g.oppTeam && !('id' in g.oppTeam)) {
-            g.oppTeam = { id: undefined, ...g.oppTeam };
-          }
-          return g;
-        });
-      }
-    }
-    return obj;
+    return str == null ? null : JSON.parse(str);
   } catch {
     return null;
   }
