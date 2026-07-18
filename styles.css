@@ -404,11 +404,11 @@ html.screen-game body {
 }
 
 .adj button {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   margin: 0 3px;
   padding: 0;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 700;
   line-height: 1;
   border: 1px solid var(--border);
@@ -434,10 +434,10 @@ html.screen-game body {
 }
 
 .clkstep {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   padding: 0;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   line-height: 1;
   border: 1px solid var(--border);
   background: var(--btn-bg);
@@ -576,7 +576,7 @@ html.screen-game body {
 }
 
 .col {
-  width: 17%;
+  width: 21%;
   overflow-y: auto;
   touch-action: pan-y;
   padding: 4px;
@@ -589,7 +589,7 @@ html.screen-game body {
 }
 
 .col.wide {
-  flex: 1 1 17%;
+  flex: 1 1 21%;
 }
 
 .expandbtn {
@@ -608,7 +608,7 @@ html.screen-game body {
 }
 
 .controls {
-  flex: 1 1 66%;
+  flex: 1 1 58%;
   min-height: 0;
   padding: 4px;
   display: flex;
