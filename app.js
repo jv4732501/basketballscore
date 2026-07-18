@@ -741,6 +741,7 @@ function render() {
 // --- Teams editing state (null = list view; object = editing a team) ---
 let teamEdit = null;
 let addOpen = null; // 'my' | 'opp' | null — which column's add-form is open
+let collapsedTeam = null; // 'my' | 'opp' | null — which player column is collapsed
 let missArm = false; // when true, the next shot tap records a miss, then disarms
 let missLock = false; // when true, MISS stays armed across shots until double-clicked off
 let flashKey = null; // key of the grid button to flash blue on the next render, or null
@@ -1226,6 +1227,7 @@ function openHistoryGame(id) {
   }
   state.game = reopenGame(entry);
   addOpen = null;
+  collapsedTeam = null;
   missArm = false;
   missLock = false;
   saveGame();
@@ -1278,6 +1280,7 @@ function startGame(tipWinner, startClock = true) {
   state.game = g;
   setupDraft = null;
   addOpen = null;
+  collapsedTeam = null;
   missArm = false;
   missLock = false;
   saveGame();
@@ -1568,9 +1571,9 @@ function renderGame() {
     </div>
 
     <div class="court">
-      <div class="col">${renderPlayers(g, leftTeam)}</div>
+      <div class="col${collapsedTeam === leftTeam ? ' collapsed' : ''}">${renderPlayers(g, leftTeam)}</div>
       <div class="controls">${renderControls(g)}</div>
-      <div class="col">${renderPlayers(g, rightTeam)}</div>
+      <div class="col${collapsedTeam === rightTeam ? ' collapsed' : ''}">${renderPlayers(g, rightTeam)}</div>
     </div>
   `;
   wireGame();
@@ -1582,6 +1585,9 @@ function teamName(g, team) {
 }
 
 function renderPlayers(g, team) {
+  if (collapsedTeam === team) {
+    return `<button class="expandbtn" data-expand="${team}">Expand</button>`;
+  }
   const t = team === 'my' ? g.myTeam : g.oppTeam;
   const rows = t.players
     .slice()
@@ -1603,7 +1609,7 @@ function renderPlayers(g, team) {
          <button data-addclose="${team}">Close</button>
        </div>`
       : `<button class="addbtn" data-addopen="${team}">+ Add</button>`;
-  return rows + addUI;
+  return rows + addUI + `<button class="collapsebtn" data-collapse="${team}">Collapse</button>`;
 }
 
 function renderControls(g) {
@@ -1672,6 +1678,23 @@ function wireGame() {
     (b) =>
       (b.onkeydown = (e) => {
         if (e.key === 'Enter') document.querySelector(`[data-addgo="${b.dataset.addnum}"]`).click();
+      }),
+  );
+
+  el_each(
+    '[data-collapse]',
+    (b) =>
+      (b.onclick = () => {
+        collapsedTeam = b.dataset.collapse;
+        render();
+      }),
+  );
+  el_each(
+    '[data-expand]',
+    (b) =>
+      (b.onclick = () => {
+        collapsedTeam = null;
+        render();
       }),
   );
 
