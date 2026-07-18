@@ -66,6 +66,7 @@ function newGame({ config, myTeam, oppTeam }) {
         id: p.id,
         num: p.num,
         name: p.name,
+        starter: !!p.starter,
         ...emptyMyStats(),
       })),
     },
@@ -76,6 +77,7 @@ function newGame({ config, myTeam, oppTeam }) {
         id: p.id,
         num: p.num,
         name: p.name,
+        starter: !!p.starter,
         ...emptyMyStats(),
       })),
     },
@@ -253,6 +255,29 @@ function subOut(game, team, playerId, nowMs) {
     { team, playerId, type: 'sub_out', detail: `${playerTag(p)} subs out`, rev },
     nowMs,
   );
+}
+
+function hasAnyStarter(game) {
+  return game.myTeam.players.some((p) => p.starter) || game.oppTeam.players.some((p) => p.starter);
+}
+
+function isFreshPeriodStart(game) {
+  if (game.clock.running) return false;
+  const fullSec =
+    (game.period <= game.config.numHalves ? game.config.halfLengthMin : game.config.otLengthMin) *
+    60;
+  return game.clock.remainingSec === fullSec;
+}
+
+function resetToStarters(game, nowMs) {
+  let g = game;
+  for (const team of ['my', 'opp']) {
+    const t = team === 'my' ? g.myTeam : g.oppTeam;
+    for (const p of t.players) {
+      g = p.starter ? subIn(g, team, p.id, nowMs) : subOut(g, team, p.id, nowMs);
+    }
+  }
+  return g;
 }
 
 function fmtMinutes(secs) {
@@ -643,6 +668,9 @@ if (typeof module !== 'undefined' && module.exports) {
     reopenGame,
     subIn,
     subOut,
+    hasAnyStarter,
+    isFreshPeriodStart,
+    resetToStarters,
     fmtMinutes,
     playerEff,
     buildSummaryText,
@@ -896,6 +924,7 @@ function renderRoster(players) {
         (p, i) => `
         <li class="listrow">
           <span class="listmain">#${p.num} ${esc(p.name || '')}</span>
+          <button data-starter="te:${i}" class="starterbtn${p.starter ? ' active' : ''}">Starter</button>
           <button data-editbtn="te:${i}">Edit</button>
           <button data-rm="te:${i}" class="danger">Delete</button>
         </li>`,
@@ -1154,6 +1183,16 @@ function renderTeamEditor(el) {
   $('te-add-num').onkeydown = (e) => {
     if (e.key === 'Enter') add();
   };
+  el_each(
+    '[data-starter]',
+    (b) =>
+      (b.onclick = () => {
+        const [, i] = b.dataset.starter.split(':'); // "te:i"
+        const p = d.players[parseInt(i, 10)];
+        p.starter = !p.starter;
+        renderTeams();
+      }),
+  );
   el_each(
     '[data-rm]',
     (b) =>
@@ -1767,7 +1806,14 @@ function wireGame() {
     (b) => (b.ondblclick = () => commit((game, now) => swapHomeAway(game, now))),
   );
   $('clk-toggle') &&
-    ($('clk-toggle').onclick = () => commit((game, now) => toggleClock(game, now)));
+    ($('clk-toggle').onclick = () => {
+      const g = state.game;
+      const doReset = isFreshPeriodStart(g) && hasAnyStarter(g) && confirm('Sub in starters?');
+      commit((game, now) => {
+        const ng = doReset ? resetToStarters(game, now) : game;
+        return toggleClock(ng, now);
+      });
+    });
   el_each('[data-clk]', (b) => attachClockPress(b));
 
   let missClickTimer = null;

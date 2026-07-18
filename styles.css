@@ -972,3 +972,9 @@ table.bs .totrow td {
   color: #fff;
   border: none;
 }
+
+.listrow button.starterbtn.active {
+  background: #16a34a;
+  color: #fff;
+  border-color: #16a34a;
+}

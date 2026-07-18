@@ -586,6 +586,74 @@ test('fmtMinutes formats seconds to one-decimal minutes', () => {
   assert.strictEqual(fmtMinutes(undefined), '0.0');
 });
 
+const { hasAnyStarter, isFreshPeriodStart, resetToStarters } = app;
+
+test('newGame carries the starter flag onto game players without auto-subbing them in', () => {
+  const g = newGame({
+    config: { halfLengthMin: 18, numHalves: 2, otLengthMin: 4, myTeamSide: 'home' },
+    myTeam: {
+      id: 't1',
+      name: 'Mine',
+      players: [{ id: 'p1', num: 5, name: 'Smith', starter: true }],
+    },
+    oppTeam: { name: 'Them', players: [{ id: 'o1', num: 9, name: '', starter: false }] },
+  });
+  assert.strictEqual(g.myTeam.players[0].starter, true);
+  assert.strictEqual(g.oppTeam.players[0].starter, false);
+  assert.strictEqual(g.myTeam.players[0].onCourt, false);
+});
+
+test('hasAnyStarter detects a starter on either team', () => {
+  let g = freshGame();
+  assert.strictEqual(hasAnyStarter(g), false);
+  g.myTeam.players[0].starter = true;
+  assert.strictEqual(hasAnyStarter(g), true);
+});
+
+test('isFreshPeriodStart is true only when the clock is stopped at the full period length', () => {
+  let g = freshGame(); // stopped, remaining = 18*60 (period 1)
+  assert.strictEqual(isFreshPeriodStart(g), true);
+  g = startClock(g, 1000);
+  assert.strictEqual(isFreshPeriodStart(g), false); // running
+  g = stopClock(g, 6000); // 5s elapsed, stopped
+  assert.strictEqual(isFreshPeriodStart(g), false); // partial time
+});
+
+test('isFreshPeriodStart uses the OT length once past regulation periods', () => {
+  let g = freshGame();
+  g.period = 3; // OT (numHalves = 2)
+  g.clock = { remainingSec: 4 * 60, running: false, startedAt: null };
+  assert.strictEqual(isFreshPeriodStart(g), true);
+  g.clock.remainingSec = 18 * 60; // wrong length for OT
+  assert.strictEqual(isFreshPeriodStart(g), false);
+});
+
+test('resetToStarters subs in starters and subs out everyone else', () => {
+  let g = newGame({
+    config: { halfLengthMin: 18, numHalves: 2, otLengthMin: 4, myTeamSide: 'home' },
+    myTeam: {
+      id: 't1',
+      name: 'Mine',
+      players: [
+        { id: 'p1', num: 1, name: 'A', starter: true },
+        { id: 'p2', num: 2, name: 'B', starter: false },
+      ],
+    },
+    oppTeam: { name: 'Them', players: [{ id: 'o1', num: 9, name: '', starter: true }] },
+  });
+  g = subIn(g, 'my', 'p2', 500); // non-starter mistakenly on court already
+  g = resetToStarters(g, 1000);
+  assert.strictEqual(g.myTeam.players[0].onCourt, true); // starter now on
+  assert.strictEqual(g.myTeam.players[1].onCourt, false); // non-starter subbed back out
+  assert.strictEqual(g.oppTeam.players[0].onCourt, true); // opp starter on
+});
+
+test('resetToStarters is a no-op when nobody needs to change', () => {
+  let g = freshGame();
+  const before = resetToStarters(g, 1000);
+  assert.deepStrictEqual(before, g);
+});
+
 const { addPlayerToGame } = app;
 
 test('addPlayerToGame appends a full-stat player to the named team', () => {
