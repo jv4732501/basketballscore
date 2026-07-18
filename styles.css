@@ -392,6 +392,11 @@ html.screen-game body {
   font-weight: 700;
 }
 
+.adj {
+  display: flex;
+  flex-shrink: 0;
+}
+
 .adj button {
   width: 32px;
   height: 32px;
