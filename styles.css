@@ -302,6 +302,12 @@ html.screen-game body {
 
 .backup-actions button {
   flex: 1;
+  padding: 12px;
+  font-weight: 700;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
 }
 
 .error {
