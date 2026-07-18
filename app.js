@@ -1,6 +1,9 @@
 'use strict';
 
 const VERSION = '1.0.0';
+// Hardcoded rather than derived from location.origin/pathname so a shared team link
+// is always correct even when "Share" is tapped from a local/dev copy of the app.
+const APP_URL = 'https://jv4732501.github.io/basketballscore/';
 
 function clone(obj) {
   return structuredClone(obj);
@@ -2243,7 +2246,7 @@ function closeActivityDialog() {
 function openShareTeamDialog(teamId) {
   const t = state.teams.find((x) => x.id === teamId);
   if (!t) return;
-  const url = `${location.origin}${location.pathname}#team=${encodeTeamForShare(t)}`;
+  const url = `${APP_URL}#team=${encodeTeamForShare(t)}`;
   const back = document.createElement('div');
   back.className = 'dlgback';
   back.addEventListener('pointerdown', closeActivityDialog);
