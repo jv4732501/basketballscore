@@ -2435,16 +2435,35 @@ function openActivityDialog(team, id) {
   document.body.appendChild(dlg);
 }
 
-// Clock -/+ buttons: quick tap = ±1s, long-press (500ms) = ±10s, same direction.
+// Clock -/+ buttons: quick tap = ±1s, hold (500ms) = ±10s, then keeps repeating
+// ±10s every 300ms for as long as the button is held.
 function attachClockPress(btn) {
   const dir = parseInt(btn.dataset.clk, 10); // -1 or +1
   let timer = null,
+    repeatTimer = null,
     longFired = false;
+  const big = () => commit((game, now) => adjustClock(game, dir * 10, now));
+  // Repeat cleanup also listens on document, not just btn: each big() commit
+  // re-renders and replaces btn, so the original element's own touchend/mouseup
+  // may never fire once it's been swapped out from under an ongoing hold.
+  const stopRepeat = () => {
+    if (repeatTimer) {
+      clearInterval(repeatTimer);
+      repeatTimer = null;
+    }
+    document.removeEventListener('touchend', stopRepeat);
+    document.removeEventListener('touchcancel', stopRepeat);
+    document.removeEventListener('mouseup', stopRepeat);
+  };
   const start = () => {
     longFired = false;
     timer = setTimeout(() => {
       longFired = true;
-      commit((game, now) => adjustClock(game, dir * 10, now));
+      big();
+      repeatTimer = setInterval(big, 300);
+      document.addEventListener('touchend', stopRepeat);
+      document.addEventListener('touchcancel', stopRepeat);
+      document.addEventListener('mouseup', stopRepeat);
     }, 500);
   };
   const end = () => {
@@ -2452,6 +2471,7 @@ function attachClockPress(btn) {
       clearTimeout(timer);
       timer = null;
     }
+    stopRepeat();
   };
   btn.addEventListener('touchstart', start, { passive: true });
   btn.addEventListener('touchend', end);
