@@ -1070,7 +1070,7 @@ function wireSetup() {
         reader.onload = () => {
           const result = validateBackup(deserialize(reader.result));
           if (!result.ok) {
-            alert(result.reason);
+            themedAlert(result.reason);
             return;
           }
           const { state: merged, summary } = mergeBackup(state, result.backup);
@@ -1080,10 +1080,10 @@ function wireSetup() {
           saveTeams();
           saveHistory();
           saveGame();
-          alert(importMessage(summary));
+          themedAlert(importMessage(summary));
           render();
         };
-        reader.onerror = () => alert('Could not read the file.');
+        reader.onerror = () => themedAlert('Could not read the file.');
         reader.readAsText(f);
       };
       input.click();
@@ -1223,9 +1223,13 @@ function renderTeams() {
   el_each(
     '[data-del-team]',
     (b) =>
-      (b.onclick = () => {
+      (b.onclick = async () => {
         const t = state.teams.find((x) => x.id === b.dataset.delTeam);
-        if (!confirm(`Delete team "${t.name}"? This cannot be undone.`)) return;
+        const ok = await themedConfirm(`Delete team "${t.name}"? This cannot be undone.`, {
+          okLabel: 'Delete',
+          danger: true,
+        });
+        if (!ok) return;
         state.teams = state.teams.filter((x) => x.id !== b.dataset.delTeam);
         saveTeams();
         renderTeams();
@@ -1281,10 +1285,14 @@ function renderTeamEditor(el) {
   el_each(
     '[data-rm]',
     (b) =>
-      (b.onclick = () => {
+      (b.onclick = async () => {
         const [, i] = b.dataset.rm.split(':'); // "te:i"
         const p = d.players[parseInt(i, 10)];
-        if (!confirm(`Remove #${p.num}${p.name ? ' ' + p.name : ''} from the roster?`)) return;
+        const ok = await themedConfirm(
+          `Remove #${p.num}${p.name ? ' ' + p.name : ''} from the roster?`,
+          { okLabel: 'Remove', danger: true },
+        );
+        if (!ok) return;
         d.players.splice(parseInt(i, 10), 1);
         renderTeams();
       }),
@@ -1349,8 +1357,12 @@ function renderHistory() {
   el_each(
     '[data-del-game]',
     (b) =>
-      (b.onclick = () => {
-        if (!confirm('Delete this game from history?')) return;
+      (b.onclick = async () => {
+        const ok = await themedConfirm('Delete this game from history?', {
+          okLabel: 'Delete',
+          danger: true,
+        });
+        if (!ok) return;
         state.history = removeFromHistory(state.history, b.dataset.delGame);
         saveHistory();
         renderHistory();
@@ -1363,11 +1375,15 @@ function viewHistoryGame(id) {
   render();
 }
 
-function openHistoryGame(id) {
+async function openHistoryGame(id) {
   const entry = state.history.find((g) => g.id === id);
   if (!entry) return;
   if (state.game && state.game.screen === 'game' && state.game.id !== id) {
-    if (!confirm('Discard the current in-progress game and open this one?')) return;
+    const ok = await themedConfirm('Discard the current in-progress game and open this one?', {
+      okLabel: 'Discard',
+      danger: true,
+    });
+    if (!ok) return;
   }
   state.game = reopenGame(entry);
   addOpen = null;
@@ -1429,8 +1445,12 @@ function startGame(tipWinner, startClock = true) {
 function resumeGame() {
   render();
 } // state.game already screen:'game'
-function discardGame() {
-  if (!confirm('Discard the in-progress game? This cannot be undone.')) return;
+async function discardGame() {
+  const ok = await themedConfirm('Discard the in-progress game? This cannot be undone.', {
+    okLabel: 'Discard',
+    danger: true,
+  });
+  if (!ok) return;
   state.game = null;
   saveGame();
   setupDraft = defaultDraft();
@@ -1905,9 +1925,10 @@ function wireGame() {
       }),
   );
   $('clk-toggle') &&
-    ($('clk-toggle').onclick = () => {
+    ($('clk-toggle').onclick = async () => {
       const g = state.game;
-      const doReset = isFreshPeriodStart(g) && hasAnyStarter(g) && confirm('Sub in starters?');
+      const doReset =
+        isFreshPeriodStart(g) && hasAnyStarter(g) && (await themedConfirm('Sub in starters?'));
       commit((game, now) => {
         const ng = doReset ? resetToStarters(game, now) : game;
         return toggleClock(ng, now);
@@ -2244,6 +2265,57 @@ function closeActivityDialog() {
   document.querySelectorAll('.dialog, .dlgback').forEach((n) => n.remove());
 }
 
+// Themed replacements for window.alert/confirm: native dialogs are drawn by the
+// browser/OS and can't be styled (always white, ignoring dark theme). Built on
+// the same .dlgback/.dialog pattern as the rest of the app's overlays.
+function themedAlert(message) {
+  return new Promise((resolve) => {
+    const back = document.createElement('div');
+    back.className = 'dlgback';
+    const dlg = document.createElement('div');
+    dlg.className = 'dialog';
+    dlg.innerHTML = `
+      <div class="dlgbody"><p>${esc(message)}</p></div>
+      <div class="tip-row"><button id="ta-ok" class="tip">OK</button></div>
+    `;
+    document.body.appendChild(back);
+    document.body.appendChild(dlg);
+    const close = () => {
+      back.remove();
+      dlg.remove();
+      resolve();
+    };
+    back.addEventListener('pointerdown', close);
+    dlg.querySelector('#ta-ok').onclick = close;
+  });
+}
+
+function themedConfirm(message, { okLabel = 'OK', cancelLabel = 'Cancel', danger = false } = {}) {
+  return new Promise((resolve) => {
+    const back = document.createElement('div');
+    back.className = 'dlgback';
+    const dlg = document.createElement('div');
+    dlg.className = 'dialog';
+    dlg.innerHTML = `
+      <div class="dlgbody"><p>${esc(message)}</p></div>
+      <div class="tip-row">
+        <button id="tc-ok" class="tip${danger ? ' danger' : ''}">${esc(okLabel)}</button>
+        <button id="tc-cancel">${esc(cancelLabel)}</button>
+      </div>
+    `;
+    document.body.appendChild(back);
+    document.body.appendChild(dlg);
+    const finish = (result) => {
+      back.remove();
+      dlg.remove();
+      resolve(result);
+    };
+    back.addEventListener('pointerdown', () => finish(false));
+    dlg.querySelector('#tc-ok').onclick = () => finish(true);
+    dlg.querySelector('#tc-cancel').onclick = () => finish(false);
+  });
+}
+
 function openShareTeamDialog(teamId) {
   const t = state.teams.find((x) => x.id === teamId);
   if (!t) return;
@@ -2446,24 +2518,27 @@ function showUpdateBanner() {
 // separate from Safari, so a QR scan (which always opens in Safari) can't rely
 // on localStorage to reach an already-installed app — pasting the link works
 // regardless, since the whole payload travels in the text itself.
-function importSharedTeamCode(code) {
+async function importSharedTeamCode(code) {
   const result = decodeSharedTeam(code);
   if (!result.ok) {
-    alert(result.reason);
+    themedAlert(result.reason);
     return false;
   }
   const t = result.team;
-  if (!confirm(`Import team "${t.name}" (${t.players.length} players)?`)) return false;
+  const ok = await themedConfirm(`Import team "${t.name}" (${t.players.length} players)?`, {
+    okLabel: 'Import',
+  });
+  if (!ok) return false;
   state.teams.push(t);
   saveTeams();
   return true;
 }
 
-function checkForSharedTeam() {
+async function checkForSharedTeam() {
   const m = location.hash.match(/^#team=(.+)$/);
   if (!m) return;
   history.replaceState(null, '', location.pathname + location.search);
-  if (importSharedTeamCode(m[1])) render();
+  if (await importSharedTeamCode(m[1])) render();
 }
 
 function openImportTeamDialog() {
@@ -2488,7 +2563,7 @@ function openImportTeamDialog() {
   document.body.appendChild(back);
   document.body.appendChild(dlg);
   document.getElementById('import-team-cancel').onclick = closeActivityDialog;
-  document.getElementById('import-team-go').onclick = () => {
+  document.getElementById('import-team-go').onclick = async () => {
     const raw = document.getElementById('import-team-input').value;
     const m = raw.match(/#team=([^\s&]+)/);
     const code = (m ? m[1] : raw).trim();
@@ -2496,7 +2571,7 @@ function openImportTeamDialog() {
       document.getElementById('import-team-error').textContent = 'Paste a link first.';
       return;
     }
-    if (importSharedTeamCode(code)) {
+    if (await importSharedTeamCode(code)) {
       closeActivityDialog();
       renderTeams();
     }

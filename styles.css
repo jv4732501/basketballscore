@@ -265,6 +265,12 @@ html.screen-game body {
   min-height: 52px;
 }
 
+.tip-row .tip.danger {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+}
+
 .startbtn {
   width: 100%;
   margin-top: 8px;
