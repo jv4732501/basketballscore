@@ -1202,12 +1202,13 @@ function renderTeams() {
         .join('')
     : `<p class="muted">No saved teams yet.</p>`;
 
-  el.innerHTML = `<h1>Teams</h1><button id="btn-add-team">+ Add Team</button><ul class="list">${rows}</ul>`;
+  el.innerHTML = `<h1>Teams</h1><button id="btn-add-team">+ Add Team</button><button id="btn-import-team">Import from link</button><ul class="list">${rows}</ul>`;
 
   document.getElementById('btn-add-team').onclick = () => {
     teamEdit = { id: makeLocalId(), name: '', players: [] };
     renderTeams();
   };
+  document.getElementById('btn-import-team').onclick = openImportTeamDialog;
 
   el_each('[data-share-team]', (b) => (b.onclick = () => openShareTeamDialog(b.dataset.shareTeam)));
   el_each(
@@ -2314,6 +2315,9 @@ function openHelpDialog() {
         <li>Fouls turn orange at the bonus and red at the double bonus.</li>
         <li>Tap Review on a History row to see that game's box score again, with Print and Share available there too.</li>
         <li>Tap Share on a saved team (Teams tab) to send its roster to another coach as a QR code or link.</li>
+        <li>Tap "Import from link" (Teams tab) and paste a shared link to bring in a team — use this if
+        scanning the QR code didn't make the team show up (it may have opened in a different browser
+        context than the one you're using).</li>
         <li>Export/Import backups from Setup if you need to clear your browser data without losing teams or history.</li>
       </ul>
       <p>This app works best added to your Home Screen as a standalone app — no browser toolbar, and it checks for updates automatically.</p>
@@ -2435,21 +2439,66 @@ function showUpdateBanner() {
   };
 }
 
+// Shared by the auto-import-on-load path (checkForSharedTeam) and the manual
+// "Import from link" dialog: iOS gives a Home Screen web app its own storage,
+// separate from Safari, so a QR scan (which always opens in Safari) can't rely
+// on localStorage to reach an already-installed app — pasting the link works
+// regardless, since the whole payload travels in the text itself.
+function importSharedTeamCode(code) {
+  const result = decodeSharedTeam(code);
+  if (!result.ok) {
+    alert(result.reason);
+    return false;
+  }
+  const t = result.team;
+  if (!confirm(`Import team "${t.name}" (${t.players.length} players)?`)) return false;
+  state.teams.push(t);
+  saveTeams();
+  return true;
+}
+
 function checkForSharedTeam() {
   const m = location.hash.match(/^#team=(.+)$/);
   if (!m) return;
   history.replaceState(null, '', location.pathname + location.search);
-  const result = decodeSharedTeam(m[1]);
-  if (!result.ok) {
-    alert(result.reason);
-    return;
-  }
-  const t = result.team;
-  if (confirm(`Import team "${t.name}" (${t.players.length} players)?`)) {
-    state.teams.push(t);
-    saveTeams();
-    render();
-  }
+  if (importSharedTeamCode(m[1])) render();
+}
+
+function openImportTeamDialog() {
+  const back = document.createElement('div');
+  back.className = 'dlgback';
+  back.addEventListener('pointerdown', closeActivityDialog);
+  const dlg = document.createElement('div');
+  dlg.className = 'dialog';
+  dlg.innerHTML = `
+    <h3>Import Team from Link</h3>
+    <div class="dlgbody">
+      <p class="muted">Paste the link the other coach shared. This works even if it was scanned or
+      opened somewhere other than this app.</p>
+      <input id="import-team-input" placeholder="Paste link here">
+      <p id="import-team-error" class="error"></p>
+    </div>
+    <div class="tip-row">
+      <button id="import-team-go" class="tip">Import</button>
+      <button id="import-team-cancel">Cancel</button>
+    </div>
+  `;
+  document.body.appendChild(back);
+  document.body.appendChild(dlg);
+  document.getElementById('import-team-cancel').onclick = closeActivityDialog;
+  document.getElementById('import-team-go').onclick = () => {
+    const raw = document.getElementById('import-team-input').value;
+    const m = raw.match(/#team=([^\s&]+)/);
+    const code = (m ? m[1] : raw).trim();
+    if (!code) {
+      document.getElementById('import-team-error').textContent = 'Paste a link first.';
+      return;
+    }
+    if (importSharedTeamCode(code)) {
+      closeActivityDialog();
+      renderTeams();
+    }
+  };
 }
 
 function init() {
