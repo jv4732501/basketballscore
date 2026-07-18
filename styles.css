@@ -561,8 +561,7 @@ html.screen-game body {
 }
 
 .col.wide {
-  width: auto;
-  flex: 1;
+  flex: 1 1 23%;
 }
 
 .expandbtn {
@@ -581,7 +580,7 @@ html.screen-game body {
 }
 
 .controls {
-  flex: 1;
+  flex: 1 1 54%;
   min-height: 0;
   padding: 4px;
   display: flex;
