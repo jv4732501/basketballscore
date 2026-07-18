@@ -626,7 +626,11 @@ html.screen-game body {
 }
 
 .plhdr {
+  display: block;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pl {
