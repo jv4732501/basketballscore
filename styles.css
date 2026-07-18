@@ -295,6 +295,15 @@ html.screen-game body {
   padding: 8px 12px;
 }
 
+.backup-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.backup-actions button {
+  flex: 1;
+}
+
 .error {
   color: var(--danger);
   min-height: 1.2em;

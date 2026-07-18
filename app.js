@@ -816,6 +816,14 @@ function renderSetup() {
       <button id="btn-start-home" class="startbtn">Start</button>
       <p id="setup-error" class="error"></p>
     </section>
+
+    <section class="card">
+      <h2>Backup</h2>
+      <div class="backup-actions">
+        <button id="btn-export">Export data</button>
+        <button id="btn-import">Import data</button>
+      </div>
+    </section>
   `;
   wireSetup();
 }
@@ -884,12 +892,69 @@ function initials(name) {
     .join('');
 }
 
+function importMessage(s) {
+  const teams = s.teamsAdded + s.teamsUpdated;
+  const games = s.gamesAdded + s.gamesUpdated;
+  let msg = `Imported ${teams} team${teams === 1 ? '' : 's'} (${s.teamsUpdated} updated) and ${games} game${games === 1 ? '' : 's'} (${s.gamesUpdated} updated).`;
+  if (s.gameRestored) msg += ' In-progress game restored.';
+  if (s.gameSkipped)
+    msg += " Skipped the backup's in-progress game (a game is already in progress here).";
+  return msg;
+}
+
 function wireSetup() {
   const d = setupDraft;
   const $ = (id) => document.getElementById(id);
 
   $('btn-resume') && ($('btn-resume').onclick = resumeGame);
   $('btn-discard') && ($('btn-discard').onclick = discardGame);
+
+  $('btn-export') &&
+    ($('btn-export').onclick = () => {
+      const json = serialize(buildBackup(state, Date.now()));
+      const filename = `hoopscore-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      const file = new File([json], filename, { type: 'application/json' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: 'HoopScore backup' }).catch(() => {});
+      } else {
+        const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    });
+
+  $('btn-import') &&
+    ($('btn-import').onclick = () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/json,.json';
+      input.onchange = () => {
+        const f = input.files && input.files[0];
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = validateBackup(deserialize(reader.result));
+          if (!result.ok) {
+            alert(result.reason);
+            return;
+          }
+          const { state: merged, summary } = mergeBackup(state, result.backup);
+          state.teams = merged.teams;
+          state.history = merged.history;
+          state.game = merged.game;
+          saveTeams();
+          saveHistory();
+          saveGame();
+          alert(importMessage(summary));
+          render();
+        };
+        reader.readAsText(f);
+      };
+      input.click();
+    });
 
   const sel = $('my-team-select');
   if (sel)
