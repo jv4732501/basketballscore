@@ -70,6 +70,7 @@ function newGame({ config, myTeam, oppTeam }) {
       })),
     },
     oppTeam: {
+      ...(oppTeam.id !== undefined && { id: oppTeam.id }),
       name: oppTeam.name,
       players: oppTeam.players.map((p) => ({
         id: p.id,
@@ -1291,13 +1292,27 @@ function startGame(tipWinner, startClock = true) {
     return;
   }
   if (!d.oppName.trim()) {
-    err.textContent = 'Enter the opponent name.';
+    err.textContent = "Enter Team 2's name.";
     return;
   }
   const activePlayers = myTeam.players.filter((p) => d.activePlayerIds.includes(p.id));
   if (!activePlayers.length) {
     err.textContent = 'Select at least one active player.';
     return;
+  }
+
+  let oppTeamId, oppPlayers;
+  const oppSaved = d.oppTeamId ? state.teams.find((t) => t.id === d.oppTeamId) : null;
+  if (oppSaved) {
+    oppPlayers = oppSaved.players.filter((p) => d.activeOppPlayerIds.includes(p.id));
+    if (!oppPlayers.length) {
+      err.textContent = 'Select at least one active player for Team 2.';
+      return;
+    }
+    oppTeamId = oppSaved.id;
+  } else {
+    oppPlayers = d.oppPlayers;
+    oppTeamId = undefined;
   }
 
   let g = newGame({
@@ -1308,7 +1323,7 @@ function startGame(tipWinner, startClock = true) {
       myTeamSide: d.myTeamSide,
     },
     myTeam: { id: myTeam.id, name: myTeam.name, players: activePlayers },
-    oppTeam: { name: d.oppName.trim(), players: d.oppPlayers },
+    oppTeam: { id: oppTeamId, name: d.oppName.trim(), players: oppPlayers },
   });
   g.id = makeLocalId();
   g.date = Date.now();
@@ -1788,6 +1803,10 @@ function wireGame() {
   $('btn-ot') && ($('btn-ot').onclick = () => commit((game, now) => addOvertime(game, now)));
 }
 
+function backingSavedTeamId(team) {
+  return team === 'my' ? state.game.myTeam.id : state.game.oppTeam.id;
+}
+
 function addGamePlayerFromForm(team) {
   const numEl = document.querySelector(`[data-addnum="${team}"]`);
   const nameEl = document.querySelector(`[data-addname="${team}"]`);
@@ -1795,9 +1814,10 @@ function addGamePlayerFromForm(team) {
   if (isNaN(num)) return; // blank/non-numeric jersey → no-op
   const player = { id: makeLocalId(), num, name: nameEl.value.trim() };
   commit((game) => addPlayerToGame(game, team, player)); // mutate → save → render
-  if (team === 'my') {
+  const savedId = backingSavedTeamId(team);
+  if (savedId) {
     // persist to the saved team
-    const t = state.teams.find((x) => x.id === state.game.myTeam.id);
+    const t = state.teams.find((x) => x.id === savedId);
     if (t) {
       t.players.push({ id: player.id, num: player.num, name: player.name });
       saveTeams();
@@ -2033,8 +2053,9 @@ function openPlayerEditDialog(team, id) {
     }
     const name = dlg.querySelector('#pe-name').value.trim();
     commit((game) => editPlayer(game, team, id, { num, name }));
-    if (team === 'my') {
-      const st = state.teams.find((x) => x.id === state.game.myTeam.id);
+    const savedId = backingSavedTeamId(team);
+    if (savedId) {
+      const st = state.teams.find((x) => x.id === savedId);
       const sp = st && st.players.find((x) => x.id === id);
       if (sp) {
         sp.num = num;
