@@ -695,12 +695,13 @@ function renderNav() {
     ['teams', 'Teams'],
     ['history', 'History'],
   ];
-  document.getElementById('nav').innerHTML = tabs
-    .map(
-      ([v, label]) =>
-        `<button class="navtab ${homeView === v ? 'active' : ''}" data-nav="${v}">${label}</button>`,
-    )
-    .join('');
+  document.getElementById('nav').innerHTML =
+    tabs
+      .map(
+        ([v, label]) =>
+          `<button class="navtab ${homeView === v ? 'active' : ''}" data-nav="${v}">${label}</button>`,
+      )
+      .join('') + `<button class="navhelp" id="btn-help" title="Help">?</button>`;
   el_each(
     '[data-nav]',
     (b) =>
@@ -709,6 +710,7 @@ function renderNav() {
         render();
       }),
   );
+  document.getElementById('btn-help').onclick = openHelpDialog;
 }
 
 function render() {
@@ -2073,6 +2075,45 @@ function openRosterEditDialog(i) {
 
 function closeActivityDialog() {
   document.querySelectorAll('.dialog, .dlgback').forEach((n) => n.remove());
+}
+
+function openHelpDialog() {
+  const back = document.createElement('div');
+  back.className = 'dlgback';
+  back.addEventListener('pointerdown', closeActivityDialog);
+  const dlg = document.createElement('div');
+  dlg.className = 'dialog';
+  const shareBtn =
+    typeof navigator.share === 'function'
+      ? `<button class="dlgclose" id="help-share">Share / Add to Home Screen</button>`
+      : '';
+  dlg.innerHTML = `
+    <h3>How to use HoopScore</h3>
+    <div class="dlgbody">
+      <ul class="helplist">
+        <li>Tap a player to select them, then tap a stat button (2PT, 3PT, REB, etc.) to record it.</li>
+        <li>Long-press a player for Activity / Sub In-Out. Double-tap a player to rename or renumber them.</li>
+        <li>Tap MISS before recording a shot to mark just that one shot as a miss (it disarms automatically after). Double-tap MISS to lock it on — every shot records as a miss until you double-tap MISS again to unlock.</li>
+        <li>Long-press a stat label (fouls, score) to see that stat's log.</li>
+        <li>UNDO reverses the last action.</li>
+        <li>Collapse a team's panel (below its Add button) to make the shared stat buttons bigger when you're only scoring one team.</li>
+        <li>Double-tap either H/A badge to swap Home/Away.</li>
+        <li>Export/Import backups from Setup if you need to clear your browser data without losing teams or history.</li>
+      </ul>
+      <p>This app works best added to your Home Screen as a standalone app — no browser toolbar, and it checks for updates automatically.</p>
+      ${shareBtn}
+    </div>
+    <button class="dlgclose" id="help-close">Close</button>
+  `;
+  document.body.appendChild(back);
+  document.body.appendChild(dlg);
+  dlg.querySelector('#help-close').onclick = closeActivityDialog;
+  const shareEl = dlg.querySelector('#help-share');
+  if (shareEl) {
+    shareEl.onclick = () => {
+      navigator.share({ title: 'HoopScore', url: location.href }).catch(() => {});
+    };
+  }
 }
 
 function openActivityDialog(team, id) {

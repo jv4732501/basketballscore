@@ -114,6 +114,18 @@ html.screen-game body {
   color: var(--accent-text);
 }
 
+.navhelp {
+  flex: 0 0 auto;
+  width: 40px;
+  padding: 10px;
+  font-weight: 700;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+}
+
 #teams,
 #history {
   padding: 16px;
@@ -894,6 +906,16 @@ table.bs .totrow td {
 .dlgbody .ev {
   padding: 3px 0;
   border-bottom: 1px solid var(--row-border);
+}
+
+.helplist {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.helplist li {
+  margin-bottom: 10px;
+  line-height: 1.4;
 }
 
 .dlgclose {
