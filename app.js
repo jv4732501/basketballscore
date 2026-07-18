@@ -1625,7 +1625,7 @@ function renderGame() {
         <button class="tfadj" data-to="${leftTeam}:-1" ${g.timeouts[leftTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-to="${leftTeam}:1">+</button></span>
       <span class="period-ctl">${
         g.period < g.config.numHalves
-          ? `<button id="btn-endhalf">END HALF</button>`
+          ? `<button id="btn-endhalf">END PERIOD</button>`
           : `<button id="btn-endgame">END GAME</button><button id="btn-ot">+OT</button>`
       }</span>
       <span class="tf"><span class="statlbl" data-actlog="to:${rightTeam}">TO: ${g.timeouts[rightTeam]}</span>
