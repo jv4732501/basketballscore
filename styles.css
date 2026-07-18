@@ -594,6 +594,7 @@ html.screen-game body {
 .pl .pp {
   font-size: 0.7rem;
   color: var(--muted);
+  white-space: nowrap;
 }
 
 .plhdr {
