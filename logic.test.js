@@ -98,10 +98,20 @@ test('newGame builds initial state keyed by identity', () => {
   assert.deepStrictEqual(g.score, { my: 0, opp: 0 });
   assert.deepStrictEqual(g.periodScores, []);
   assert.strictEqual(g.possession, 'my');
+  assert.strictEqual(g.homeTeam, 'my'); // myTeamSide: 'home' -> my team starts as home
   assert.strictEqual(g.myTeam.players[0].pts, 0); // my players carry full stats
   assert.strictEqual(g.myTeam.players[0].oreb, 0);
   assert.strictEqual(g.oppTeam.players[0].pts, 0); // both teams carry the full stat set
   assert.strictEqual('dreb' in g.oppTeam.players[0], true);
+});
+
+test('newGame sets homeTeam to opp when myTeamSide is away', () => {
+  const g = newGame({
+    config: { halfLengthMin: 18, numHalves: 2, otLengthMin: 4, myTeamSide: 'away' },
+    myTeam: { id: 't1', name: 'Mine', players: [] },
+    oppTeam: { name: 'Them', players: [] },
+  });
+  assert.strictEqual(g.homeTeam, 'opp');
 });
 
 test('newGame omits oppTeam.id when not provided, includes it when provided', () => {
@@ -294,35 +304,36 @@ test('setPossession does not log', () => {
 
 const { swapHomeAway } = app;
 
-test('swapHomeAway flips config.myTeamSide and logs', () => {
+test('swapHomeAway flips homeTeam and logs, without touching screen position', () => {
   let g = freshGame();
-  assert.strictEqual(g.config.myTeamSide, 'home');
+  assert.strictEqual(g.homeTeam, 'my');
   g = swapHomeAway(g, 1000);
-  assert.strictEqual(g.config.myTeamSide, 'away');
+  assert.strictEqual(g.homeTeam, 'opp');
+  assert.strictEqual(g.config.myTeamSide, 'home'); // screen position (left/right) is untouched
   assert.strictEqual(g.log[0].type, 'swap_sides');
   assert.strictEqual(g.log[0].detail, 'Home/Away swapped');
   g = swapHomeAway(g, 2000);
-  assert.strictEqual(g.config.myTeamSide, 'home');
+  assert.strictEqual(g.homeTeam, 'my');
   assert.strictEqual(g.log.length, 2);
 });
 
 test('undo reverses a home/away swap', () => {
   let g = swapHomeAway(freshGame(), 1000);
-  assert.strictEqual(g.config.myTeamSide, 'away');
+  assert.strictEqual(g.homeTeam, 'opp');
   g = undo(g);
-  assert.strictEqual(g.config.myTeamSide, 'home');
+  assert.strictEqual(g.homeTeam, 'my');
   assert.strictEqual(g.log.length, 0);
 });
 
 test('sequential swap-then-swap-back both undo cleanly', () => {
-  let g = swapHomeAway(freshGame(), 1000); // home -> away
-  g = swapHomeAway(g, 2000); // away -> home
-  assert.strictEqual(g.config.myTeamSide, 'home');
+  let g = swapHomeAway(freshGame(), 1000); // my -> opp
+  g = swapHomeAway(g, 2000); // opp -> my
+  assert.strictEqual(g.homeTeam, 'my');
   g = undo(g); // undo second swap
-  assert.strictEqual(g.config.myTeamSide, 'away');
+  assert.strictEqual(g.homeTeam, 'opp');
   assert.strictEqual(g.log.length, 1);
   g = undo(g); // undo first swap
-  assert.strictEqual(g.config.myTeamSide, 'home');
+  assert.strictEqual(g.homeTeam, 'my');
   assert.strictEqual(g.log.length, 0);
 });
 

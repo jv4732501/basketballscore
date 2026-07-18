@@ -96,6 +96,7 @@ function newGame({ config, myTeam, oppTeam }) {
     clock: { remainingSec: config.halfLengthMin * 60, running: false, startedAt: null },
     score: { my: 0, opp: 0 },
     possession: 'my',
+    homeTeam: config.myTeamSide === 'home' ? 'my' : 'opp',
     teamFouls: { my: 0, opp: 0 },
     timeouts: { my: 0, opp: 0 },
     periodScores: [],
@@ -382,8 +383,8 @@ function togglePossession(game, nowMs) {
 
 function swapHomeAway(game, nowMs) {
   let g = clone(game);
-  const prev = g.config.myTeamSide;
-  g.config.myTeamSide = prev === 'home' ? 'away' : 'home';
+  const prev = g.homeTeam;
+  g.homeTeam = prev === 'my' ? 'opp' : 'my';
   g = pushLog(
     g,
     { type: 'swap_sides', detail: 'Home/Away swapped', rev: { kind: 'swaphomeaway', prev } },
@@ -489,7 +490,7 @@ function undo(game) {
       p.courtSecs -= rev.courtSecsDelta;
     }
   } else if (rev.kind === 'swaphomeaway') {
-    g.config.myTeamSide = rev.prev;
+    g.homeTeam = rev.prev;
   }
   return g;
 }
@@ -1663,24 +1664,26 @@ function renderGame() {
     return `<span class="foulnum${s === 'none' ? '' : ' ' + s}">${tf[team]}</span>`;
   };
 
-  // Physical left/right follows myTeamSide (display only)
+  // Physical left/right follows myTeamSide, fixed for the game (display only).
+  // Home/Away is tracked separately (g.homeTeam) so swapping it never moves either
+  // team's on-screen position — it only updates which side's badge reads H vs A.
   const myLeft = g.config.myTeamSide === 'home';
   const leftTeam = myLeft ? 'my' : 'opp';
   const rightTeam = myLeft ? 'opp' : 'my';
-  const sideBadge = (side) =>
-    `<button class="badge side" data-swap-sides title="Double-tap to swap Home/Away">${side === 'home' ? 'H' : 'A'}</button>`;
+  const sideBadge = (team) =>
+    `<button class="badge side" data-swap-sides title="Double-tap to swap Home/Away">${g.homeTeam === team ? 'H' : 'A'}</button>`;
   const clockRem = clockRemaining(g.clock, Date.now());
   const clockWarn = clockRem < warnSecsFor(g.config, g.period);
 
   el.innerHTML = `
     <header class="gh">
-      <div class="tn">${esc(teamName(g, leftTeam))} ${sideBadge(myLeft ? 'home' : 'away')}</div>
+      <div class="tn">${esc(teamName(g, leftTeam))} ${sideBadge(leftTeam)}</div>
       <div class="clockrow">
         <button class="clkstep" data-clk="-1">−</button>
         <div id="clock-display" class="cd${clockWarn ? ' warn' : ''}">${fmtClock(clockRem)}</div>
         <button class="clkstep" data-clk="1">+</button>
       </div>
-      <div class="tn">${esc(teamName(g, rightTeam))} ${sideBadge(myLeft ? 'away' : 'home')}</div>
+      <div class="tn">${esc(teamName(g, rightTeam))} ${sideBadge(rightTeam)}</div>
 
       <div class="sc" data-actlog="score:${leftTeam}">${g.score[leftTeam]}</div>
       <div class="period">${periodLabel(g.period, g.config.numHalves)}</div>
