@@ -1770,7 +1770,7 @@ function renderPlayers(g, team) {
     .map(
       (p) => `
     <button class="pl ${g.selectedPlayerId === p.id ? 'sel' : ''}" data-pl="${team}:${p.id}">
-      <span class="plhdr"><span class="pnum${p.onCourt ? ' oncourt' : ''}">#${p.num}</span><span class="pname">${esc(initials(p.name))}</span></span>
+      <span class="plhdr"><span class="pnum${p.onCourt ? ' oncourt' : ''}">#${p.num}</span> ${esc(initials(p.name))}</span>
       <span class="pp">${p.pts}pts·${p.pf}f</span>
     </button>`,
     )

@@ -616,37 +616,28 @@ html.screen-game body {
 }
 
 .pl {
-  font-size: 1.05rem;
+  font-size: 0.9rem;
 }
 
 .pl .pp {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: var(--muted);
   white-space: nowrap;
 }
 
 .plhdr {
-  display: flex;
-  flex-direction: column;
+  display: block;
   font-weight: 600;
-}
-
-.plhdr .pnum,
-.plhdr .pname {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.plhdr .pname {
-  font-size: 1.1em;
 }
 
 .pl {
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: 18px 10px;
+  padding: 10px 8px;
   margin-bottom: 4px;
   border: 2px solid var(--border);
   border-radius: 8px;
