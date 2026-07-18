@@ -758,7 +758,6 @@ let missLock = false; // when true, MISS stays armed across shots until double-c
 let flashKey = null; // key of the grid button to flash blue on the next render, or null
 let lastPlayerClick = null; // { id, at } | null — double-click-to-edit detection for player buttons
 let historyViewId = null; // id of a history entry being viewed read-only via the Summary screen, or null
-let historyAutoAction = null; // 'print' | 'share' | null — action to fire once after the read-only view renders
 
 // --- Setup screen state (draft, lives only while on setup) ---
 let setupDraft = null;
@@ -1209,8 +1208,7 @@ function renderHistory() {
             oppName = g.oppTeam?.name ?? 'Opp';
           return `
           <li class="listrow">
-            <button data-hist-print="${g.id}">Print</button>
-            <button data-hist-share="${g.id}" ${typeof navigator.share === 'function' ? '' : 'hidden'}>Share</button>
+            <button data-hist-review="${g.id}">Review</button>
             <span class="listmain">${esc(myName)} vs ${esc(oppName)}
               <span class="muted">${fmtDate(g.date)} · ${my}–${opp} ${wl}</span></span>
             <button data-open-game="${g.id}">Open</button>
@@ -1222,14 +1220,7 @@ function renderHistory() {
 
   el.innerHTML = `<h1>History</h1><ul class="list">${rows}</ul>`;
 
-  el_each(
-    '[data-hist-print]',
-    (b) => (b.onclick = () => viewHistoryGame(b.dataset.histPrint, 'print')),
-  );
-  el_each(
-    '[data-hist-share]',
-    (b) => (b.onclick = () => viewHistoryGame(b.dataset.histShare, 'share')),
-  );
+  el_each('[data-hist-review]', (b) => (b.onclick = () => viewHistoryGame(b.dataset.histReview)));
   el_each('[data-open-game]', (b) => (b.onclick = () => openHistoryGame(b.dataset.openGame)));
   el_each(
     '[data-del-game]',
@@ -1243,9 +1234,8 @@ function renderHistory() {
   );
 }
 
-function viewHistoryGame(id, action) {
+function viewHistoryGame(id) {
   historyViewId = id;
-  historyAutoAction = action;
   render();
 }
 
@@ -1381,12 +1371,6 @@ function renderSummary(g, readOnly) {
     };
   } else {
     document.getElementById('sum-new').onclick = newGameFromSummary;
-  }
-  if (historyAutoAction) {
-    const action = historyAutoAction;
-    historyAutoAction = null;
-    const btn = document.getElementById(action === 'print' ? 'sum-print' : 'sum-share');
-    if (btn && !btn.hidden) btn.click();
   }
 }
 
