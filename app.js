@@ -1576,12 +1576,10 @@ function renderGame() {
   const el = document.getElementById('game');
   const tf = g.teamFouls,
     bn = (team) => bonusState(tf[team]);
-  const bonusBadge = (team) =>
-    bn(team) === 'double'
-      ? '<span class="badge dbl">BB</span>'
-      : bn(team) === 'bonus'
-        ? '<span class="badge bon">B</span>'
-        : '';
+  const foulNum = (team) => {
+    const s = bn(team);
+    return `<span class="foulnum${s === 'none' ? '' : ' ' + s}">${tf[team]}</span>`;
+  };
 
   // Physical left/right follows myTeamSide (display only)
   const myLeft = g.config.myTeamSide === 'home';
@@ -1616,11 +1614,11 @@ function renderGame() {
     </header>
 
     <div class="infobar">
-      <span class="tf"><span class="statlbl" data-actlog="fouls:${leftTeam}">FS: ${tf[leftTeam]}</span>
-        <button class="tfadj" data-tf="${leftTeam}:-1" ${g.teamFouls[leftTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-tf="${leftTeam}:1">+</button> ${bonusBadge(leftTeam)}</span>
+      <span class="tf"><span class="statlbl" data-actlog="fouls:${leftTeam}">FS: ${foulNum(leftTeam)}</span>
+        <button class="tfadj" data-tf="${leftTeam}:-1" ${g.teamFouls[leftTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-tf="${leftTeam}:1">+</button></span>
       <button id="poss">POS:${g.possession === leftTeam ? '◀' : '▶'}</button>
-      <span class="tf"><span class="statlbl" data-actlog="fouls:${rightTeam}">FS: ${tf[rightTeam]}</span>
-        <button class="tfadj" data-tf="${rightTeam}:-1" ${g.teamFouls[rightTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-tf="${rightTeam}:1">+</button> ${bonusBadge(rightTeam)}</span>
+      <span class="tf"><span class="statlbl" data-actlog="fouls:${rightTeam}">FS: ${foulNum(rightTeam)}</span>
+        <button class="tfadj" data-tf="${rightTeam}:-1" ${g.teamFouls[rightTeam] === 0 ? 'disabled' : ''}>−</button><button class="tfadj" data-tf="${rightTeam}:1">+</button></span>
     </div>
     <div class="infobar small">
       <span class="tf"><span class="statlbl" data-actlog="to:${leftTeam}">TO: ${g.timeouts[leftTeam]}</span>

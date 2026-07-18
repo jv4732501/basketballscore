@@ -527,14 +527,12 @@ html.screen-game body {
   font-weight: 700;
 }
 
-.badge.bon {
-  background: #facc15;
-  color: #000;
+.foulnum.bonus {
+  color: #fb923c;
 }
 
-.badge.dbl {
-  background: #dc2626;
-  color: #fff;
+.foulnum.double {
+  color: #f87171;
 }
 
 .badge.side {
