@@ -222,7 +222,12 @@ function subIn(game, team, playerId, nowMs) {
   if (!p || p.onCourt) return game;
   p.onCourt = true;
   p.inClock = clockRemaining(g.clock, nowMs);
-  return pushLog(g, { team, playerId, type: 'sub_in', detail: `${playerTag(p)} subs in` }, nowMs);
+  const rev = { kind: 'sub', team, playerId, onCourt: false, inClock: null, courtSecsDelta: 0 };
+  return pushLog(
+    g,
+    { team, playerId, type: 'sub_in', detail: `${playerTag(p)} subs in`, rev },
+    nowMs,
+  );
 }
 
 function subOut(game, team, playerId, nowMs) {
@@ -230,10 +235,23 @@ function subOut(game, team, playerId, nowMs) {
   const t = team === 'my' ? g.myTeam : g.oppTeam;
   const p = findPlayer(t, playerId);
   if (!p || !p.onCourt) return game;
-  p.courtSecs += p.inClock - clockRemaining(g.clock, nowMs);
+  const delta = p.inClock - clockRemaining(g.clock, nowMs);
+  const rev = {
+    kind: 'sub',
+    team,
+    playerId,
+    onCourt: true,
+    inClock: p.inClock,
+    courtSecsDelta: delta,
+  };
+  p.courtSecs += delta;
   p.onCourt = false;
   p.inClock = null;
-  return pushLog(g, { team, playerId, type: 'sub_out', detail: `${playerTag(p)} subs out` }, nowMs);
+  return pushLog(
+    g,
+    { team, playerId, type: 'sub_out', detail: `${playerTag(p)} subs out`, rev },
+    nowMs,
+  );
 }
 
 function fmtMinutes(secs) {
@@ -413,6 +431,14 @@ function undo(game) {
     g.timeouts[rev.team] -= rev.delta;
   } else if (rev.kind === 'teamfoul') {
     g.teamFouls[rev.team] -= rev.delta;
+  } else if (rev.kind === 'sub') {
+    const t = rev.team === 'my' ? g.myTeam : g.oppTeam;
+    const p = findPlayer(t, rev.playerId);
+    if (p) {
+      p.onCourt = rev.onCourt;
+      p.inClock = rev.inClock;
+      p.courtSecs -= rev.courtSecsDelta;
+    }
   }
   return g;
 }

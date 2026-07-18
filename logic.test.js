@@ -506,6 +506,31 @@ test('subIn/subOut are no-ops in the wrong state', () => {
   assert.deepStrictEqual(subIn(g, 'my', 'p1', 2000), g); // already on court → no-op
 });
 
+test('undo reverses a sub-in', () => {
+  let g = startClock(freshGame(), 1000);
+  g = subIn(g, 'my', 'p1', 1000);
+  g = undo(g);
+  const p = g.myTeam.players[0];
+  assert.strictEqual(p.onCourt, false);
+  assert.strictEqual(p.inClock, null);
+  assert.strictEqual(g.log.length, 0);
+});
+
+test('undo reverses a sub-out, restoring inClock and accrued seconds', () => {
+  let g = startClock(freshGame(), 1000);
+  g = subIn(g, 'my', 'p1', 1000); // inClock 18*60
+  g = subOut(g, 'my', 'p1', 61000); // accrues 60s
+  g = undo(g);
+  const p = g.myTeam.players[0];
+  assert.strictEqual(p.onCourt, true);
+  assert.strictEqual(p.inClock, 18 * 60);
+  assert.strictEqual(p.courtSecs, 0);
+  assert.strictEqual(g.log[g.log.length - 1].type, 'sub_in');
+  // a later sub-out still accounts the full stint from the original sub-in
+  g = subOut(g, 'my', 'p1', 121000); // 120s after sub-in
+  assert.strictEqual(g.myTeam.players[0].courtSecs, 120);
+});
+
 test('fmtMinutes formats seconds to one-decimal minutes', () => {
   assert.strictEqual(fmtMinutes(0), '0.0');
   assert.strictEqual(fmtMinutes(90), '1.5');
