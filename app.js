@@ -1614,9 +1614,9 @@ function renderPlayers(g, team) {
          <button data-addgo="${team}">Add</button>
          <button data-addclose="${team}">Close</button>
        </div>`
-      : `<button class="addbtn" data-addopen="${team}">+ Add</button>`;
+      : `<button class="colbtn" data-addopen="${team}">+ Add</button>`;
   return (
-    rows + addUI + `<button class="addbtn collapsebtn" data-collapse="${team}">Collapse</button>`
+    rows + addUI + `<button class="colbtn collapsebtn" data-collapse="${team}">Collapse</button>`
   );
 }
 

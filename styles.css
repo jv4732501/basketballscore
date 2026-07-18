@@ -581,7 +581,7 @@ html.screen-game body {
   border-color: var(--accent);
 }
 
-.addbtn {
+.colbtn {
   width: 100%;
   padding: 6px;
   font-size: 0.8rem;
