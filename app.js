@@ -2134,12 +2134,60 @@ function attachClockPress(btn) {
   };
 }
 
+// --- Update check: detect a new deploy while the app sits open/backgrounded ---
+let knownAppJsHash = null;
+let updateBannerDismissed = false;
+
+function simpleHash(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  }
+  return h;
+}
+
+async function checkForUpdate() {
+  if (updateBannerDismissed || document.getElementById('update-banner')) return;
+  try {
+    const res = await fetch('app.js', { cache: 'no-store' });
+    if (!res.ok) return;
+    const hash = simpleHash(await res.text());
+    if (knownAppJsHash === null) {
+      knownAppJsHash = hash;
+    } else if (hash !== knownAppJsHash) {
+      showUpdateBanner();
+    }
+  } catch {
+    // offline or blocked — non-critical background check, fail silently
+  }
+}
+
+function showUpdateBanner() {
+  const bar = document.createElement('div');
+  bar.id = 'update-banner';
+  bar.innerHTML = `
+    <span>Update available</span>
+    <button id="update-reload">Reload</button>
+    <button id="update-dismiss" class="dismiss" title="Dismiss">×</button>
+  `;
+  document.body.appendChild(bar);
+  document.getElementById('update-reload').onclick = () => location.reload();
+  document.getElementById('update-dismiss').onclick = () => {
+    updateBannerDismissed = true;
+    bar.remove();
+  };
+}
+
 function init() {
   loadAll();
   applyTheme();
   render();
+  checkForUpdate();
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && state.game && state.game.screen === 'game') render();
+    if (!document.hidden) {
+      checkForUpdate();
+      if (state.game && state.game.screen === 'game') render();
+    }
   });
 }
 

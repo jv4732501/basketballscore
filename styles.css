@@ -272,6 +272,38 @@ html.screen-game body {
   margin-bottom: 16px;
 }
 
+#update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 12px;
+  padding-top: max(8px, env(safe-area-inset-top));
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+#update-banner button {
+  background: rgba(0, 0, 0, 0.15);
+  color: inherit;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-weight: 700;
+}
+
+#update-banner .dismiss {
+  padding: 4px 8px;
+  font-weight: 400;
+}
+
 .resume-actions {
   display: flex;
   gap: 8px;
