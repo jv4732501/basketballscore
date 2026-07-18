@@ -380,6 +380,12 @@ html.screen-game body {
   text-align: center;
 }
 
+.tn {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .sc {
   font-size: 2rem;
   font-weight: 700;

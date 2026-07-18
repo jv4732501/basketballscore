@@ -1680,13 +1680,13 @@ function renderGame() {
 
   el.innerHTML = `
     <header class="gh">
-      <div class="tn">${esc(teamName(g, leftTeam))} ${sideBadge(leftTeam)}</div>
+      <div class="tn">${sideBadge(leftTeam)} ${esc(teamName(g, leftTeam))}</div>
       <div class="clockrow">
         <button class="clkstep" data-clk="-1">−</button>
         <div id="clock-display" class="cd${clockWarn ? ' warn' : ''}">${fmtClock(clockRem)}</div>
         <button class="clkstep" data-clk="1">+</button>
       </div>
-      <div class="tn">${esc(teamName(g, rightTeam))} ${sideBadge(rightTeam)}</div>
+      <div class="tn">${sideBadge(rightTeam)} ${esc(teamName(g, rightTeam))}</div>
 
       <div class="sc" data-actlog="score:${leftTeam}">${g.score[leftTeam]}</div>
       <div class="period">${periodLabel(g.period, g.config.numHalves)}</div>
