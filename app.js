@@ -1477,9 +1477,10 @@ function renderSummary(g, readOnly) {
   if (share && !share.hidden)
     share.onclick = () => {
       const text = buildSummaryText(g, leftTeam, rightTeam, deltas);
+      const dateStr = g.date ? new Date(g.date).toISOString().slice(0, 10) : '';
       const title = `${g.myTeam.name} vs ${g.oppTeam.name}`;
       const filename =
-        `${g.myTeam.name}-vs-${g.oppTeam.name}`.replace(/[^a-z0-9-]+/gi, '-') + '.txt';
+        `${dateStr}-${g.myTeam.name}-vs-${g.oppTeam.name}`.replace(/[^a-z0-9-]+/gi, '-') + '.txt';
       const file = new File([text], filename, { type: 'text/plain' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         navigator.share({ files: [file] }).catch(() => {});
@@ -1588,6 +1589,7 @@ function buildSummaryText(g, leftTeam, rightTeam, deltas) {
   const teamOf = (team) => (team === 'my' ? g.myTeam : g.oppTeam);
   const lines = [];
   lines.push(`${g.myTeam.name} vs ${g.oppTeam.name}`);
+  if (g.date) lines.push(new Date(g.date).toISOString().slice(0, 10));
   lines.push('');
   lines.push(
     `FINAL: ${teamName(g, leftTeam)} ${g.score[leftTeam]} – ${g.score[rightTeam]} ${teamName(g, rightTeam)}`,
