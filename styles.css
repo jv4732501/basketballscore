@@ -592,14 +592,7 @@ html.screen-game body {
 }
 
 .collapsebtn {
-  width: 100%;
-  padding: 6px;
   margin-top: 4px;
-  font-size: 0.75rem;
-  background: var(--surface);
-  color: var(--muted);
-  border: 1px dashed var(--border);
-  border-radius: 6px;
 }
 
 .addpl {

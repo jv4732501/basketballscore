@@ -1615,7 +1615,9 @@ function renderPlayers(g, team) {
          <button data-addclose="${team}">Close</button>
        </div>`
       : `<button class="addbtn" data-addopen="${team}">+ Add</button>`;
-  return rows + addUI + `<button class="collapsebtn" data-collapse="${team}">Collapse</button>`;
+  return (
+    rows + addUI + `<button class="addbtn collapsebtn" data-collapse="${team}">Collapse</button>`
+  );
 }
 
 function renderControls(g) {
