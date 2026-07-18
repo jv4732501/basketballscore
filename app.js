@@ -785,6 +785,7 @@ let missArm = false; // when true, the next shot tap records a miss, then disarm
 let missLock = false; // when true, MISS stays armed across shots until double-clicked off
 let flashKey = null; // key of the grid button to flash blue on the next render, or null
 let lastPlayerClick = null; // { id, at } | null — double-click-to-edit detection for player buttons
+let lastSwapClickAt = 0; // last tap time on either H/A badge — manual double-tap detection for the swap action
 let historyViewId = null; // id of a history entry being viewed read-only via the Summary screen, or null
 
 // --- Setup screen state (draft, lives only while on setup) ---
@@ -1803,7 +1804,18 @@ function wireGame() {
   $('poss') && ($('poss').onclick = () => commit((game, now) => togglePossession(game, now)));
   el_each(
     '[data-swap-sides]',
-    (b) => (b.ondblclick = () => commit((game, now) => swapHomeAway(game, now))),
+    (b) =>
+      (b.onclick = () => {
+        // Native dblclick doesn't fire reliably from touch taps on iOS Safari, so
+        // detect the double-tap manually (same pattern as lastPlayerClick).
+        const now = Date.now();
+        if (now - lastSwapClickAt < 300) {
+          lastSwapClickAt = 0;
+          commit((game, nowMs) => swapHomeAway(game, nowMs));
+        } else {
+          lastSwapClickAt = now;
+        }
+      }),
   );
   $('clk-toggle') &&
     ($('clk-toggle').onclick = () => {
