@@ -29,7 +29,7 @@ function emptyMyStats() {
 }
 
 function periodLabel(period, numHalves) {
-  return period <= numHalves ? 'H' + period : 'OT' + (period - numHalves);
+  return period <= numHalves ? 'P' + period : 'OT' + (period - numHalves);
 }
 
 const BONUS = 7,

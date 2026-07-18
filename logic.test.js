@@ -40,8 +40,8 @@ test('empty stat shapes', () => {
 });
 
 test('periodLabel', () => {
-  assert.strictEqual(periodLabel(1, 2), 'H1');
-  assert.strictEqual(periodLabel(2, 2), 'H2');
+  assert.strictEqual(periodLabel(1, 2), 'P1');
+  assert.strictEqual(periodLabel(2, 2), 'P2');
   assert.strictEqual(periodLabel(3, 2), 'OT1');
   assert.strictEqual(periodLabel(4, 2), 'OT2');
 });
@@ -701,15 +701,15 @@ test('editPlayer is a no-op for an unknown id', () => {
 });
 
 test('court time accrues across a half boundary', () => {
-  let g = startClock(freshGame(), 1000); // H1 running, remaining 18*60
+  let g = startClock(freshGame(), 1000); // P1 running, remaining 18*60
   g = subIn(g, 'my', 'p1', 1000); // inClock 18*60
-  g = endHalf(g, 481000); // 480s elapsed → close at 18*60-480; reopen at H2 full
+  g = endHalf(g, 481000); // 480s elapsed → close at 18*60-480; reopen at P2 full
   assert.strictEqual(g.myTeam.players[0].courtSecs, 480);
   assert.strictEqual(g.period, 2);
   assert.strictEqual(g.myTeam.players[0].onCourt, true);
   assert.strictEqual(g.myTeam.players[0].inClock, 18 * 60); // reopened at new full clock
-  g = startClock(g, 500000); // H2 running
-  g = subOut(g, 'my', 'p1', 560000); // 60s in H2
+  g = startClock(g, 500000); // P2 running
+  g = subOut(g, 'my', 'p1', 560000); // 60s in P2
   assert.strictEqual(g.myTeam.players[0].courtSecs, 540); // 480 + 60
 });
 
@@ -826,7 +826,7 @@ test('buildSummaryText produces the full plain-text game summary', () => {
     'FINAL: Hawks 10 – 8 Eagles',
     '',
     'Scoring by period',
-    'H1 Total',
+    'P1 Total',
     'Hawks: 10 10',
     'Eagles: 8 8',
     '',
@@ -839,7 +839,7 @@ test('buildSummaryText produces the full plain-text game summary', () => {
     'TOTAL: 8 PTS, 3/8 FG, 0/1 3PT, 2/2 FT, 1 OREB, 4 DREB, 5 REB, 0 STL, 1 BLK, 1 AST, 2 TO, 3 FLS, 9.0 MIN, 8 EFF',
     '',
     'Game log',
-    '5:30 H1 – Smith made 2PT',
+    '5:30 P1 – Smith made 2PT',
   ].join('\n');
   assert.strictEqual(text, expected);
 });
@@ -927,7 +927,7 @@ test('buildSummaryText sorts players by number and sums box-score totals across 
     'FINAL: Hawks 10 – 8 Eagles',
     '',
     'Scoring by period',
-    'H1 Total',
+    'P1 Total',
     'Hawks: 10 10',
     'Eagles: 8 8',
     '',
@@ -941,7 +941,7 @@ test('buildSummaryText sorts players by number and sums box-score totals across 
     'TOTAL: 8 PTS, 3/8 FG, 0/1 3PT, 2/2 FT, 1 OREB, 4 DREB, 5 REB, 0 STL, 1 BLK, 1 AST, 2 TO, 3 FLS, 9.0 MIN, 8 EFF',
     '',
     'Game log',
-    '5:30 H1 – Smith made 2PT',
+    '5:30 P1 – Smith made 2PT',
   ].join('\n');
   assert.strictEqual(text, expected);
 });
