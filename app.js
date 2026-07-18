@@ -1208,9 +1208,9 @@ function renderHistory() {
             oppName = g.oppTeam?.name ?? 'Opp';
           return `
           <li class="listrow">
-            <button data-hist-review="${g.id}">Review</button>
             <span class="listmain">${esc(myName)} vs ${esc(oppName)}
               <span class="muted">${fmtDate(g.date)} · ${my}–${opp} ${wl}</span></span>
+            <button data-hist-review="${g.id}">Review</button>
             <button data-open-game="${g.id}">Open</button>
             <button data-del-game="${g.id}" class="danger">Delete</button>
           </li>`;
