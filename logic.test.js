@@ -990,3 +990,18 @@ test('mergeBackup never clobbers a live local game, restores otherwise', () => {
   assert.strictEqual(r.state.game, liveLocal);
   assert.strictEqual(r.summary.gameSkipped, false);
 });
+
+test('validateBackup drops corrupted non-object entries and primitive game', () => {
+  const v = validateBackup({
+    app: 'hoopscore',
+    formatVersion: 1,
+    teams: [null, { id: 't1', name: 'Mine', players: [] }, 7],
+    history: [null, 'junk', { id: 'g1' }],
+    game: 42,
+  });
+  assert.strictEqual(v.ok, true);
+  assert.deepStrictEqual(v.backup.teams, [{ id: 't1', name: 'Mine', players: [] }]);
+  assert.strictEqual(v.backup.history.length, 1);
+  assert.strictEqual(v.backup.history[0].id, 'g1');
+  assert.strictEqual(v.backup.game, null);
+});

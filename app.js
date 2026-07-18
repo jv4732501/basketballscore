@@ -538,9 +538,9 @@ function validateBackup(obj) {
   return {
     ok: true,
     backup: {
-      teams,
-      history: history.map((g) => migrateGame(g)),
-      game: obj.game ? migrateGame(obj.game) : null,
+      teams: teams.filter((t) => t && typeof t === 'object'),
+      history: history.filter((g) => g && typeof g === 'object').map((g) => migrateGame(g)),
+      game: obj.game && typeof obj.game === 'object' ? migrateGame(obj.game) : null,
     },
   };
 }
@@ -951,6 +951,7 @@ function wireSetup() {
           alert(importMessage(summary));
           render();
         };
+        reader.onerror = () => alert('Could not read the file.');
         reader.readAsText(f);
       };
       input.click();
