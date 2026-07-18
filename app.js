@@ -2314,6 +2314,8 @@ function openHelpDialog() {
         <li>Set a per-period clock warning time in Setup → Settings — the clock turns orange once you're under it.</li>
         <li>Fouls turn orange at the bonus and red at the double bonus.</li>
         <li>Tap Review on a History row to see that game's box score again, with Print and Share available there too.</li>
+        <li>Share on the final score screen sends the box score and play-by-play log as plain text — paste it
+        into an AI app (ChatGPT, Claude, etc.) and ask for a written game recap.</li>
         <li>Tap Share on a saved team (Teams tab) to send its roster to another coach as a QR code or link.</li>
         <li>Tap "Import from link" (Teams tab) and paste a shared link to bring in a team — use this if
         scanning the QR code didn't make the team show up (it may have opened in a different browser
