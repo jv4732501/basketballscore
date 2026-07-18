@@ -1990,7 +1990,7 @@ function recordSelectedStat(stat, opts = {}) {
 }
 
 function attachPressHandlers(btn, stat) {
-  const hasMenu = !!SHOT_INFO[stat] || stat === 'foul'; // shots: Miss(+mods); foul: mods
+  const hasMenu = (MODIFIERS[stat] || []).length > 0; // shot/foul modifiers only, no more Miss
   let timer = null,
     longFired = false;
   const start = () => {
@@ -2061,12 +2061,10 @@ function openPopover(anchorBtn, items) {
 }
 
 function openStatMenu(anchorBtn, stat) {
-  const isShot = !!SHOT_INFO[stat];
-  const items = [];
-  if (isShot) items.push({ label: 'Miss', act: () => recordSelectedStat(stat, { made: false }) });
-  (MODIFIERS[stat] || []).forEach((m) =>
-    items.push({ label: m, act: () => recordSelectedStat(stat, { made: true, modifier: m }) }),
-  );
+  const items = (MODIFIERS[stat] || []).map((m) => ({
+    label: m,
+    act: () => recordSelectedStat(stat, { made: true, modifier: m }),
+  }));
   openPopover(anchorBtn, items);
 }
 
