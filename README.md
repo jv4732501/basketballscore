@@ -24,12 +24,22 @@ Optional one-off terminal check/fix (no extension needed): `npx prettier --check
 Commit the three files to a GitHub repo and enable GitHub Pages on the branch.
 
 ## Manual QA checklist
-- [ ] First run: create a team, add opponent, tap tip → game starts, clock runs.
-- [ ] Scoring (2/3/FT make+miss), make/miss auto-reset, detailed stats for my team.
+- [ ] First run: create Team 1, pick a saved Team 2 as opponent, tap tip → game starts, clock runs.
+- [ ] Scoring (2/3/FT make+miss via the MISS button, tap and double-tap-to-lock), make/miss auto-reset, detailed stats for my team.
+- [ ] Long-press a shot button for the shot-type modifier menu (Layup/Dunk/etc.) — no Miss option there.
 - [ ] Opponent limited to points + fouls.
-- [ ] Team fouls bonus (7) / double bonus (10) badges.
-- [ ] Clock: start/stop, SET, lock-screen catch-up, auto-stop at 0:00, timeout stops clock.
-- [ ] Possession toggle; undo; END HALF; +OT; END GAME.
-- [ ] "My team is Away": my team renders right, still gets detailed controls + saved correctly.
-- [ ] Summary: final score, period table, box scores, log; Print shows only summary; New Game resets.
+- [ ] Team fouls turn orange at the bonus (7) and red at the double bonus (10).
+- [ ] Clock: start/stop, SET, lock-screen catch-up, auto-stop at 0:00, timeout stops clock; digits turn orange under the per-period warning threshold set in Setup → Settings.
+- [ ] Possession toggle; undo; END PERIOD; +OT; END GAME.
+- [ ] "My team is Away": my team renders right, still gets detailed controls + saved correctly; screen side stays fixed for the whole game.
+- [ ] Double-tap either H/A badge: label updates and it logs, but teams don't swap sides on screen.
+- [ ] Mark players as Starters (Teams tab) → "Sub in starters?" prompt appears at the start of each period, including game start.
+- [ ] Collapse a team's panel on the game screen to make the shared stat buttons bigger.
+- [ ] Summary: final score, period table, box scores, log; Print shows only summary; Home resets.
 - [ ] Reload mid-game → resume banner → Resume restores exact state; Discard clears it.
+- [ ] History → Review opens the read-only summary for a past game; Print/Share work there too.
+- [ ] Summary/History Share sends the box score + log as a text file (or title+text where Web Share files aren't supported).
+- [ ] Teams tab → Share on a saved team shows a QR code and (where supported) a Share Link button.
+- [ ] Teams tab → Import from link: paste a shared-team link/code, confirm, team appears in the list.
+- [ ] Setup → Export data downloads a dated backup; Import restores it (including on a cleared browser).
+- [ ] Add to Home Screen on iOS: icon shows the basketball artwork (not a page screenshot); standalone app launches with no browser toolbar.
