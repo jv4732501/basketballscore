@@ -1142,3 +1142,62 @@ test('validateBackup drops corrupted non-object entries and primitive game', () 
   assert.strictEqual(v.backup.history[0].id, 'g1');
   assert.strictEqual(v.backup.game, null);
 });
+
+const { encodeTeamForShare, decodeSharedTeam } = app;
+
+test('encodeTeamForShare/decodeSharedTeam round-trips a team roster', () => {
+  const team = {
+    id: 't1',
+    name: 'Kauk JV2',
+    players: [
+      { id: 'p1', num: 1, name: 'Zac', starter: true },
+      { id: 'p2', num: 2, name: 'Logan', starter: false },
+    ],
+  };
+  const encoded = encodeTeamForShare(team);
+  assert.strictEqual(typeof encoded, 'string');
+  assert.doesNotMatch(encoded, /[+/=]/); // URL-safe: no base64 chars needing escaping
+
+  const result = decodeSharedTeam(encoded);
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(result.team.name, 'Kauk JV2');
+  assert.strictEqual(result.team.players.length, 2);
+  assert.strictEqual(result.team.players[0].num, 1);
+  assert.strictEqual(result.team.players[0].name, 'Zac');
+  assert.strictEqual(result.team.players[0].starter, true);
+  assert.strictEqual(result.team.players[1].starter, false);
+  // Fresh local ids, not the sender's
+  assert.notStrictEqual(result.team.id, 't1');
+  assert.notStrictEqual(result.team.players[0].id, 'p1');
+});
+
+test('encodeTeamForShare/decodeSharedTeam round-trips non-ASCII names', () => {
+  const team = { id: 't1', name: 'Café Ballers', players: [{ id: 'p1', num: 9, name: 'José' }] };
+  const result = decodeSharedTeam(encodeTeamForShare(team));
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(result.team.name, 'Café Ballers');
+  assert.strictEqual(result.team.players[0].name, 'José');
+});
+
+test('decodeSharedTeam rejects garbage input', () => {
+  assert.strictEqual(decodeSharedTeam('not-valid-base64!!!').ok, false);
+  assert.strictEqual(decodeSharedTeam('').ok, false);
+});
+
+test('decodeSharedTeam drops corrupted player entries and defaults a missing name', () => {
+  // Hand-craft a payload with a bad player entry mixed with a valid one missing a name
+  const raw = JSON.stringify({
+    name: 'Team',
+    players: [null, 7, { num: 5 }, { num: 'x', name: 'Bad Num' }],
+  });
+  const b64 = Buffer.from(raw, 'utf8')
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+  const result = decodeSharedTeam(b64);
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(result.team.players.length, 1);
+  assert.strictEqual(result.team.players[0].num, 5);
+  assert.strictEqual(result.team.players[0].name, '');
+});

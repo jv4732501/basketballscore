@@ -925,6 +925,15 @@ table.bs .totrow td {
   line-height: 1.4;
 }
 
+.qr-canvas {
+  display: flex;
+  justify-content: center;
+  margin: 12px 0;
+  background: #fff;
+  padding: 8px;
+  border-radius: 8px;
+}
+
 .dlgclose {
   margin-top: 10px;
   padding: 10px;

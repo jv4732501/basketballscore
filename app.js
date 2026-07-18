@@ -635,6 +635,51 @@ function mergeBackup(state, backup) {
   };
 }
 
+function toBase64Url(str) {
+  const b64 = btoa(unescape(encodeURIComponent(str)));
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function fromBase64Url(str) {
+  let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (b64.length % 4) b64 += '=';
+  return decodeURIComponent(escape(atob(b64)));
+}
+
+function encodeTeamForShare(team) {
+  const payload = {
+    name: team.name,
+    players: team.players.map((p) => ({ num: p.num, name: p.name, starter: !!p.starter })),
+  };
+  return toBase64Url(JSON.stringify(payload));
+}
+
+function decodeSharedTeam(str) {
+  const fail = { ok: false, reason: 'Could not read the shared team link.' };
+  let obj;
+  try {
+    obj = JSON.parse(fromBase64Url(str));
+  } catch {
+    return fail;
+  }
+  if (
+    !obj ||
+    typeof obj !== 'object' ||
+    typeof obj.name !== 'string' ||
+    !Array.isArray(obj.players)
+  )
+    return fail;
+  const players = obj.players
+    .filter((p) => p && typeof p === 'object' && typeof p.num === 'number')
+    .map((p) => ({
+      id: makeLocalId(),
+      num: p.num,
+      name: typeof p.name === 'string' ? p.name : '',
+      starter: !!p.starter,
+    }));
+  return { ok: true, team: { id: makeLocalId(), name: obj.name.trim() || 'Shared Team', players } };
+}
+
 // ===== EXPORT SHIM (test runner only; browser ignores) =====
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -675,6 +720,8 @@ if (typeof module !== 'undefined' && module.exports) {
     buildBackup,
     validateBackup,
     mergeBackup,
+    encodeTeamForShare,
+    decodeSharedTeam,
     migrateGame,
     upsertHistory,
     removeFromHistory,
@@ -1146,6 +1193,7 @@ function renderTeams() {
           (t) => `
         <li class="listrow">
           <span class="listmain">${esc(t.name)} <span class="muted">(${t.players.length})</span></span>
+          <button data-share-team="${t.id}">Share</button>
           <button data-edit-team="${t.id}">Edit</button>
           <button data-del-team="${t.id}" class="danger">Delete</button>
         </li>`,
@@ -1160,6 +1208,7 @@ function renderTeams() {
     renderTeams();
   };
 
+  el_each('[data-share-team]', (b) => (b.onclick = () => openShareTeamDialog(b.dataset.shareTeam)));
   el_each(
     '[data-edit-team]',
     (b) =>
@@ -2191,6 +2240,40 @@ function closeActivityDialog() {
   document.querySelectorAll('.dialog, .dlgback').forEach((n) => n.remove());
 }
 
+function openShareTeamDialog(teamId) {
+  const t = state.teams.find((x) => x.id === teamId);
+  if (!t) return;
+  const url = `${location.origin}${location.pathname}#team=${encodeTeamForShare(t)}`;
+  const back = document.createElement('div');
+  back.className = 'dlgback';
+  back.addEventListener('pointerdown', closeActivityDialog);
+  const dlg = document.createElement('div');
+  dlg.className = 'dialog';
+  const shareBtn =
+    typeof navigator.share === 'function'
+      ? `<button class="dlgclose" id="share-team-link">Share Link</button>`
+      : '';
+  dlg.innerHTML = `
+    <h3>Share "${esc(t.name)}"</h3>
+    <div class="dlgbody">
+      <p class="muted">Have the other coach scan this with their camera.</p>
+      <div id="qr-canvas" class="qr-canvas"></div>
+      ${shareBtn}
+    </div>
+    <button class="dlgclose" id="share-team-close">Close</button>
+  `;
+  document.body.appendChild(back);
+  document.body.appendChild(dlg);
+  new QRCode(document.getElementById('qr-canvas'), { text: url, width: 220, height: 220 });
+  document.getElementById('share-team-close').onclick = closeActivityDialog;
+  const linkBtn = document.getElementById('share-team-link');
+  if (linkBtn) {
+    linkBtn.onclick = () => {
+      navigator.share({ title: `HoopScore team: ${t.name}`, url }).catch(() => {});
+    };
+  }
+}
+
 function openHelpDialog() {
   const back = document.createElement('div');
   back.className = 'dlgback';
@@ -2333,10 +2416,28 @@ function showUpdateBanner() {
   };
 }
 
+function checkForSharedTeam() {
+  const m = location.hash.match(/^#team=(.+)$/);
+  if (!m) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  const result = decodeSharedTeam(m[1]);
+  if (!result.ok) {
+    alert(result.reason);
+    return;
+  }
+  const t = result.team;
+  if (confirm(`Import team "${t.name}" (${t.players.length} players)?`)) {
+    state.teams.push(t);
+    saveTeams();
+    render();
+  }
+}
+
 function init() {
   loadAll();
   applyTheme();
   render();
+  checkForSharedTeam();
   checkForUpdate();
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
