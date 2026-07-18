@@ -124,3 +124,15 @@ Manual verification (user, on real devices):
 
 Copy/paste text fallback, auto-backup reminders, selective export, theme in backups,
 cloud sync.
+
+## Reality note (post-review)
+
+The final whole-branch review found that the in-progress-game half of this spec is
+unreachable through the UI as shipped: `render()` routes to the game screen whenever
+`state.game.screen === 'game'`, so the Setup view (where the Backup card lives) only
+renders when no game is in progress. In practice, therefore, exports always contain
+`game: null`, and the merge rule "skip the backup's game when a local game is live" can
+never trigger from the UI. The `game` field and the skip rule remain implemented and
+unit-tested as defensive depth for hand-edited or externally produced backup files. If
+backing up mid-game is ever wanted, that is a future cycle (e.g. an export action
+reachable from the game screen).

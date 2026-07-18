@@ -496,4 +496,4 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 3. Desktop: Export downloads the file; Import restores it.
 4. Import the same file twice → no duplicates; counts reported as "updated".
 5. Import a random `.json` → "Not a HoopScore backup file.", nothing changed.
-6. Start scoring a game, import a backup containing an in-progress game → local game untouched, alert says the backup's game was skipped.
+6. ~~Start scoring a game, import a backup containing an in-progress game~~ — not executable: the Backup card lives on the Setup screen, which is unreachable while a game is in progress (see the spec's "Reality note"). The live-game skip rule is covered by unit tests only.
