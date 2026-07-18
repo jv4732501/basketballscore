@@ -945,6 +945,7 @@ table.bs .totrow td {
 
 .listrow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   padding: 10px;

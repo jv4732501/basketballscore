@@ -721,9 +721,18 @@ function render() {
     renderGame();
     return;
   }
+  if (historyViewId) {
+    const entry = state.history.find((x) => x.id === historyViewId);
+    if (entry) {
+      showOnly('summary');
+      renderSummary(entry, true);
+      return;
+    }
+    historyViewId = null; // entry was deleted out from under the view
+  }
   if (g && g.screen === 'summary') {
     showOnly('summary');
-    renderSummary();
+    renderSummary(g, false);
     return;
   }
   // Home (no active game): tab bar + active tab content.
@@ -748,6 +757,8 @@ let missArm = false; // when true, the next shot tap records a miss, then disarm
 let missLock = false; // when true, MISS stays armed across shots until double-clicked off
 let flashKey = null; // key of the grid button to flash blue on the next render, or null
 let lastPlayerClick = null; // { id, at } | null — double-click-to-edit detection for player buttons
+let historyViewId = null; // id of a history entry being viewed read-only via the Summary screen, or null
+let historyAutoAction = null; // 'print' | 'share' | null — action to fire once after the read-only view renders
 
 // --- Setup screen state (draft, lives only while on setup) ---
 let setupDraft = null;
@@ -1198,6 +1209,8 @@ function renderHistory() {
             oppName = g.oppTeam?.name ?? 'Opp';
           return `
           <li class="listrow">
+            <button data-hist-print="${g.id}">Print</button>
+            <button data-hist-share="${g.id}" ${typeof navigator.share === 'function' ? '' : 'hidden'}>Share</button>
             <span class="listmain">${esc(myName)} vs ${esc(oppName)}
               <span class="muted">${fmtDate(g.date)} · ${my}–${opp} ${wl}</span></span>
             <button data-open-game="${g.id}">Open</button>
@@ -1209,6 +1222,14 @@ function renderHistory() {
 
   el.innerHTML = `<h1>History</h1><ul class="list">${rows}</ul>`;
 
+  el_each(
+    '[data-hist-print]',
+    (b) => (b.onclick = () => viewHistoryGame(b.dataset.histPrint, 'print')),
+  );
+  el_each(
+    '[data-hist-share]',
+    (b) => (b.onclick = () => viewHistoryGame(b.dataset.histShare, 'share')),
+  );
   el_each('[data-open-game]', (b) => (b.onclick = () => openHistoryGame(b.dataset.openGame)));
   el_each(
     '[data-del-game]',
@@ -1220,6 +1241,12 @@ function renderHistory() {
         renderHistory();
       }),
   );
+}
+
+function viewHistoryGame(id, action) {
+  historyViewId = id;
+  historyAutoAction = action;
+  render();
 }
 
 function openHistoryGame(id) {
@@ -1295,9 +1322,8 @@ function discardGame() {
   render();
 }
 
-function renderSummary() {
+function renderSummary(g, readOnly) {
   stopTick();
-  const g = state.game;
   const myLeft = g.config.myTeamSide === 'home';
   const leftTeam = myLeft ? 'my' : 'opp';
   const rightTeam = myLeft ? 'opp' : 'my';
@@ -1310,7 +1336,7 @@ function renderSummary() {
     <div class="sum-actions no-print">
       <button id="sum-print">Print</button>
       <button id="sum-share" ${typeof navigator.share === 'function' ? '' : 'hidden'}>Share</button>
-      <button id="sum-new">New Game</button>
+      ${readOnly ? `<button id="sum-back">Back</button>` : `<button id="sum-new">New Game</button>`}
     </div>
     <h1>Final</h1>
     <div class="final">
@@ -1347,7 +1373,21 @@ function renderSummary() {
         navigator.share({ title, text }).catch(() => {});
       }
     };
-  document.getElementById('sum-new').onclick = newGameFromSummary;
+  if (readOnly) {
+    document.getElementById('sum-back').onclick = () => {
+      historyViewId = null;
+      homeView = 'history';
+      render();
+    };
+  } else {
+    document.getElementById('sum-new').onclick = newGameFromSummary;
+  }
+  if (historyAutoAction) {
+    const action = historyAutoAction;
+    historyAutoAction = null;
+    const btn = document.getElementById(action === 'print' ? 'sum-print' : 'sum-share');
+    if (btn && !btn.hidden) btn.click();
+  }
 }
 
 function boxScore(team) {
