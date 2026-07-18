@@ -746,10 +746,18 @@ let flashKey = null; // key of the grid button to flash blue on the next render,
 
 // --- Setup screen state (draft, lives only while on setup) ---
 let setupDraft = null;
+function findTeamByName(name) {
+  const norm = name.trim().toLowerCase();
+  if (!norm) return null;
+  return state.teams.find((t) => t.name.trim().toLowerCase() === norm) ?? null;
+}
+
 function defaultDraft() {
   return {
     myTeamId: state.teams[0]?.id ?? null,
     activePlayerIds: state.teams[0] ? state.teams[0].players.map((p) => p.id) : [],
+    oppTeamId: null,
+    activeOppPlayerIds: [],
     oppName: '',
     oppPlayers: [],
     halfLengthMin: 18,
@@ -769,6 +777,10 @@ function renderSetup() {
   if (!state.teams.some((t) => t.id === d.myTeamId)) {
     d.myTeamId = state.teams[0]?.id ?? null;
     d.activePlayerIds = state.teams[0] ? state.teams[0].players.map((p) => p.id) : [];
+  }
+  if (d.oppTeamId && !state.teams.some((t) => t.id === d.oppTeamId)) {
+    d.oppTeamId = null;
+    d.activeOppPlayerIds = [];
   }
   const el = document.getElementById('setup');
   const resumable = isResumable(state.game);
@@ -792,24 +804,32 @@ function renderSetup() {
         state.teams.length
           ? `
         <div class="my-team-row">
-          <h2>Team</h2>
+          <h2>Team 1</h2>
           <select id="my-team-select">
             ${state.teams.map((t) => `<option value="${t.id}" ${t.id === d.myTeamId ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}
           </select>
         </div>
-        <ul class="roster">${renderActiveRoster(d)}</ul>`
-          : `<h2>Team</h2><p class="muted">Create a team on team tab.</p>`
+        <ul class="roster">${renderActiveRosterFor(d.myTeamId, d.activePlayerIds, 'my')}</ul>`
+          : `<h2>Team 1</h2><p class="muted">Create a team on team tab.</p>`
       }
     </section>
 
     <section class="card">
-      <label class="opp-row">Opponent <input id="opp-name" value="${esc(d.oppName)}" placeholder="e.g. Celtics"></label>
+      <label class="opp-row">Team 2 <input id="opp-name" list="team-names" value="${esc(d.oppName)}" placeholder="e.g. Celtics"></label>
+      <datalist id="team-names">
+        ${state.teams.map((t) => `<option value="${esc(t.name)}">`).join('')}
+      </datalist>
+      ${
+        d.oppTeamId
+          ? `<ul class="roster">${renderActiveRosterFor(d.oppTeamId, d.activeOppPlayerIds, 'opp')}</ul>`
+          : `
       <div id="opp-players">${renderRoster(d.oppPlayers, 'opp')}</div>
       <div class="add-player">
         <input id="opp-add-num" type="number" inputmode="numeric" placeholder="#" class="num">
         <input id="opp-add-name" placeholder="Name (optional)">
         <button id="opp-add-btn">Add</button>
-      </div>
+      </div>`
+      }
     </section>
 
     <details class="card">
@@ -820,7 +840,7 @@ function renderSetup() {
     </details>
 
     <section class="card">
-      <h2>My team is</h2>
+      <h2>Team 1 is</h2>
       <div class="toggle">
         <button class="${d.myTeamSide === 'home' ? 'active' : ''}" data-side="home">Home</button>
         <button class="${d.myTeamSide === 'away' ? 'active' : ''}" data-side="away">Away</button>
@@ -848,14 +868,14 @@ function currentMyTeamName(d) {
   return t ? t.name : '';
 }
 
-function renderActiveRoster(d) {
-  const t = state.teams.find((x) => x.id === d.myTeamId);
+function renderActiveRosterFor(teamId, activeIds, which) {
+  const t = state.teams.find((x) => x.id === teamId);
   if (!t || !t.players.length) return `<p class="muted">No players on this team yet.</p>`;
   return t.players
     .map(
       (p) => `
     <li>
-      <label><input type="checkbox" data-active="${p.id}" ${d.activePlayerIds.includes(p.id) ? 'checked' : ''}><span>#${p.num} ${esc(p.name || '')}</span></label>
+      <label><input type="checkbox" data-active-${which}="${p.id}" ${activeIds.includes(p.id) ? 'checked' : ''}><span>#${p.num} ${esc(p.name || '')}</span></label>
     </li>`,
     )
     .join('');
@@ -989,10 +1009,10 @@ function wireSetup() {
       renderSetup();
     };
   el_each(
-    '[data-active]',
+    '[data-active-my]',
     (cb) =>
       (cb.onchange = () => {
-        const id = cb.dataset.active;
+        const id = cb.dataset.activeMy;
         if (cb.checked) {
           if (!d.activePlayerIds.includes(id)) d.activePlayerIds.push(id);
         } else {
@@ -1000,9 +1020,31 @@ function wireSetup() {
         }
       }),
   );
+  el_each(
+    '[data-active-opp]',
+    (cb) =>
+      (cb.onchange = () => {
+        const id = cb.dataset.activeOpp;
+        if (cb.checked) {
+          if (!d.activeOppPlayerIds.includes(id)) d.activeOppPlayerIds.push(id);
+        } else {
+          d.activeOppPlayerIds = d.activeOppPlayerIds.filter((x) => x !== id);
+        }
+      }),
+  );
   $('opp-name') &&
     ($('opp-name').oninput = (e) => {
       d.oppName = e.target.value;
+      const match = findTeamByName(d.oppName);
+      if (match) {
+        d.oppTeamId = match.id;
+        d.activeOppPlayerIds = match.players.map((p) => p.id);
+      } else if (d.oppTeamId !== null) {
+        d.oppTeamId = null;
+        d.activeOppPlayerIds = [];
+        d.oppPlayers = [];
+      }
+      renderSetup();
     });
 
   $('opp-add-btn').onclick = () => addPlayer($('opp-add-num'), $('opp-add-name'));
