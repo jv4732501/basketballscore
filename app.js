@@ -343,6 +343,18 @@ function togglePossession(game, nowMs) {
   return g;
 }
 
+function swapHomeAway(game, nowMs) {
+  let g = clone(game);
+  const prev = g.config.myTeamSide;
+  g.config.myTeamSide = prev === 'home' ? 'away' : 'home';
+  g = pushLog(
+    g,
+    { type: 'swap_sides', detail: 'Home/Away swapped', rev: { kind: 'swaphomeaway', prev } },
+    nowMs,
+  );
+  return g;
+}
+
 function setPossession(game, team) {
   const g = clone(game);
   g.possession = team;
@@ -439,6 +451,8 @@ function undo(game) {
       p.inClock = rev.inClock;
       p.courtSecs -= rev.courtSecsDelta;
     }
+  } else if (rev.kind === 'swaphomeaway') {
+    g.config.myTeamSide = rev.prev;
   }
   return g;
 }
@@ -607,6 +621,7 @@ if (typeof module !== 'undefined' && module.exports) {
     adjustTeamFouls,
     adjustTimeouts,
     togglePossession,
+    swapHomeAway,
     setPossession,
     endHalf,
     addOvertime,

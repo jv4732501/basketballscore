@@ -257,6 +257,40 @@ test('setPossession does not log', () => {
   assert.strictEqual(g.log.length, 0);
 });
 
+const { swapHomeAway } = app;
+
+test('swapHomeAway flips config.myTeamSide and logs', () => {
+  let g = freshGame();
+  assert.strictEqual(g.config.myTeamSide, 'home');
+  g = swapHomeAway(g, 1000);
+  assert.strictEqual(g.config.myTeamSide, 'away');
+  assert.strictEqual(g.log[0].type, 'swap_sides');
+  assert.strictEqual(g.log[0].detail, 'Home/Away swapped');
+  g = swapHomeAway(g, 2000);
+  assert.strictEqual(g.config.myTeamSide, 'home');
+  assert.strictEqual(g.log.length, 2);
+});
+
+test('undo reverses a home/away swap', () => {
+  let g = swapHomeAway(freshGame(), 1000);
+  assert.strictEqual(g.config.myTeamSide, 'away');
+  g = undo(g);
+  assert.strictEqual(g.config.myTeamSide, 'home');
+  assert.strictEqual(g.log.length, 0);
+});
+
+test('sequential swap-then-swap-back both undo cleanly', () => {
+  let g = swapHomeAway(freshGame(), 1000); // home -> away
+  g = swapHomeAway(g, 2000); // away -> home
+  assert.strictEqual(g.config.myTeamSide, 'home');
+  g = undo(g); // undo second swap
+  assert.strictEqual(g.config.myTeamSide, 'away');
+  assert.strictEqual(g.log.length, 1);
+  g = undo(g); // undo first swap
+  assert.strictEqual(g.config.myTeamSide, 'home');
+  assert.strictEqual(g.log.length, 0);
+});
+
 test('adjustTimeouts changes count, clamps at zero, logs applied delta', () => {
   let g = freshGame();
   g = adjustTimeouts(g, 'opp', 2, 1000);
