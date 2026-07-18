@@ -650,15 +650,22 @@ html.screen-game body {
   animation: flashBlue 500ms ease-out;
 }
 
-/* Long-press targets: suppress text selection + the touch callout that triggers the context menu. */
-.pl,
-.grid button,
-.clkstep,
-.statlbl,
-.sc {
+/* App-wide: suppress text selection + the touch callout that triggers the context menu/
+   selection bar. This app is touch-first with long-press interactions throughout (shot/foul
+   buttons, player buttons, popover menus, dialogs) — an allowlist of specific selectors kept
+   falling behind as new buttons were added, so this is applied everywhere except real text
+   inputs, which need normal selection/cursor behavior. */
+body {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+}
+
+input,
+textarea {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 #btn-miss.armed {
