@@ -828,3 +828,29 @@ test('buildSummaryText sorts players by number and sums box-score totals across 
   ].join('\n');
   assert.strictEqual(text, expected);
 });
+
+const { buildBackup } = app;
+
+test('buildBackup wraps state with app marker, version, timestamp, and deep copies', () => {
+  const st = {
+    teams: [{ id: 't1', name: 'Mine', players: [{ id: 'p1', num: 5, name: 'Smith' }] }],
+    history: [],
+    game: null,
+  };
+  const b = buildBackup(st, 1750000000000);
+  assert.strictEqual(b.app, 'hoopscore');
+  assert.strictEqual(b.formatVersion, 1);
+  assert.strictEqual(b.exportedAt, new Date(1750000000000).toISOString());
+  assert.deepStrictEqual(b.teams, st.teams);
+  assert.deepStrictEqual(b.history, []);
+  assert.strictEqual(b.game, null);
+  b.teams[0].name = 'Changed'; // must not leak back into state
+  assert.strictEqual(st.teams[0].name, 'Mine');
+});
+
+test('buildBackup includes an in-progress game when present', () => {
+  const g = freshGame();
+  const b = buildBackup({ teams: [], history: [], game: g }, 2000);
+  assert.deepStrictEqual(b.game, g);
+  assert.notStrictEqual(b.game, g); // copy, not the same reference
+});

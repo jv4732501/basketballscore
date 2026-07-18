@@ -516,6 +516,17 @@ function isResumable(game) {
   return !!game && game.screen === 'game';
 }
 
+function buildBackup(state, nowMs) {
+  return {
+    app: 'hoopscore',
+    formatVersion: 1,
+    exportedAt: new Date(nowMs).toISOString(),
+    teams: clone(state.teams),
+    history: clone(state.history),
+    game: state.game ? clone(state.game) : null,
+  };
+}
+
 // ===== EXPORT SHIM (test runner only; browser ignores) =====
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -550,6 +561,7 @@ if (typeof module !== 'undefined' && module.exports) {
     serialize,
     deserialize,
     isResumable,
+    buildBackup,
     migrateGame,
     upsertHistory,
     removeFromHistory,
