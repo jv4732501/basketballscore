@@ -943,7 +943,7 @@ function wireSetup() {
       };
       const file = new File([json], filename, { type: 'application/json' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        navigator.share({ files: [file], title: 'HoopScore backup' }).catch((e) => {
+        navigator.share({ files: [file] }).catch((e) => {
           if (e.name !== 'AbortError') download();
         });
       } else {
