@@ -963,12 +963,14 @@ table.bs .totrow td {
   margin: 0;
 }
 
-#btn-add-team {
+#btn-add-team,
+#btn-import-team {
   padding: 8px 16px;
   border: 1px solid var(--border);
   background: var(--btn-bg);
   color: var(--btn-text);
   border-radius: 6px;
+  margin-right: 8px;
   margin-bottom: 8px;
 }
 
