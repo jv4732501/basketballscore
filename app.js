@@ -1404,7 +1404,7 @@ function renderSummary() {
         `${g.myTeam.name}-vs-${g.oppTeam.name}`.replace(/[^a-z0-9-]+/gi, '-') + '.txt';
       const file = new File([text], filename, { type: 'text/plain' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        navigator.share({ files: [file], title }).catch(() => {});
+        navigator.share({ files: [file] }).catch(() => {});
       } else {
         navigator.share({ title, text }).catch(() => {});
       }
