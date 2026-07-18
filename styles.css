@@ -343,16 +343,6 @@ html.screen-game body {
   font-weight: 700;
 }
 
-.swapbtn {
-  background: none;
-  border: none;
-  color: inherit;
-  font-size: 1rem;
-  padding: 0 0 0 4px;
-  line-height: 1;
-  vertical-align: middle;
-}
-
 .adj button {
   width: 32px;
   height: 32px;
@@ -501,6 +491,9 @@ html.screen-game body {
 .badge.side {
   background: rgba(255, 255, 255, 0.18);
   color: #fff;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
 }
 
 .court {
