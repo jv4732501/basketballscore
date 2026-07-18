@@ -479,6 +479,10 @@ html.screen-game body {
   font-size: 0.8rem;
 }
 
+.gh + .infobar {
+  border-top: 1px solid var(--border);
+}
+
 .infobar .tf {
   flex: 1;
   display: inline-flex;
