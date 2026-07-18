@@ -1245,10 +1245,6 @@ function startGame(tipWinner, startClock = true) {
     return;
   }
   const activePlayers = myTeam.players.filter((p) => d.activePlayerIds.includes(p.id));
-  if (!activePlayers.length) {
-    err.textContent = 'Select at least one active player.';
-    return;
-  }
 
   const oppTeam = state.teams.find((t) => t.id === d.oppTeamId);
   if (!oppTeam) {
@@ -1260,10 +1256,6 @@ function startGame(tipWinner, startClock = true) {
     return;
   }
   const activeOppPlayers = oppTeam.players.filter((p) => d.activeOppPlayerIds.includes(p.id));
-  if (!activeOppPlayers.length) {
-    err.textContent = 'Select at least one active player for Team 2.';
-    return;
-  }
 
   let g = newGame({
     config: {
