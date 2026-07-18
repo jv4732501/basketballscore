@@ -555,7 +555,7 @@ html.screen-game body {
 }
 
 .col {
-  width: 20%;
+  width: 17%;
   overflow-y: auto;
   touch-action: pan-y;
   padding: 4px;
@@ -568,7 +568,7 @@ html.screen-game body {
 }
 
 .col.wide {
-  flex: 1 1 20%;
+  flex: 1 1 17%;
 }
 
 .expandbtn {
@@ -587,7 +587,7 @@ html.screen-game body {
 }
 
 .controls {
-  flex: 1 1 60%;
+  flex: 1 1 66%;
   min-height: 0;
   padding: 4px;
   display: flex;
@@ -672,7 +672,8 @@ html.screen-game body {
 }
 
 .grid button {
-  padding: 16px 12px;
+  padding: 20px 14px;
+  font-size: 0.95rem;
   font-weight: 700;
   background: var(--btn-bg);
   color: var(--btn-text);
