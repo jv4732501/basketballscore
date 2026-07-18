@@ -172,17 +172,6 @@ html.screen-game body {
   color: var(--text);
 }
 
-.opp-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.opp-row input {
-  width: auto;
-  flex: 1;
-}
-
 .add-player {
   display: flex;
   gap: 8px;

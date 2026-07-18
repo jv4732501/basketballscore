@@ -747,20 +747,13 @@ let flashKey = null; // key of the grid button to flash blue on the next render,
 
 // --- Setup screen state (draft, lives only while on setup) ---
 let setupDraft = null;
-function findTeamByName(name) {
-  const norm = name.trim().toLowerCase();
-  if (!norm) return null;
-  return state.teams.find((t) => t.name.trim().toLowerCase() === norm) ?? null;
-}
-
 function defaultDraft() {
+  const defaultOppTeam = state.teams[1] ?? state.teams[0];
   return {
     myTeamId: state.teams[0]?.id ?? null,
     activePlayerIds: state.teams[0] ? state.teams[0].players.map((p) => p.id) : [],
-    oppTeamId: null,
-    activeOppPlayerIds: [],
-    oppName: '',
-    oppPlayers: [],
+    oppTeamId: defaultOppTeam?.id ?? null,
+    activeOppPlayerIds: defaultOppTeam ? defaultOppTeam.players.map((p) => p.id) : [],
     halfLengthMin: 18,
     numHalves: 2,
     otLengthMin: 4,
@@ -779,9 +772,10 @@ function renderSetup() {
     d.myTeamId = state.teams[0]?.id ?? null;
     d.activePlayerIds = state.teams[0] ? state.teams[0].players.map((p) => p.id) : [];
   }
-  if (d.oppTeamId && !state.teams.some((t) => t.id === d.oppTeamId)) {
-    d.oppTeamId = null;
-    d.activeOppPlayerIds = [];
+  if (!state.teams.some((t) => t.id === d.oppTeamId)) {
+    const fallback = state.teams[1] ?? state.teams[0];
+    d.oppTeamId = fallback?.id ?? null;
+    d.activeOppPlayerIds = fallback ? fallback.players.map((p) => p.id) : [];
   }
   const el = document.getElementById('setup');
   const resumable = isResumable(state.game);
@@ -816,20 +810,17 @@ function renderSetup() {
     </section>
 
     <section class="card">
-      <label class="opp-row">Team 2 <input id="opp-name" list="team-names" value="${esc(d.oppName)}" placeholder="e.g. Celtics"></label>
-      <datalist id="team-names">
-        ${state.teams.map((t) => `<option value="${esc(t.name)}">`).join('')}
-      </datalist>
       ${
-        d.oppTeamId
-          ? `<ul class="roster">${renderActiveRosterFor(d.oppTeamId, d.activeOppPlayerIds, 'opp')}</ul>`
-          : `
-      <div id="opp-players">${renderRoster(d.oppPlayers, 'opp')}</div>
-      <div class="add-player">
-        <input id="opp-add-num" type="number" inputmode="numeric" placeholder="#" class="num">
-        <input id="opp-add-name" placeholder="Name (optional)">
-        <button id="opp-add-btn">Add</button>
-      </div>`
+        state.teams.length
+          ? `
+        <div class="my-team-row">
+          <h2>Team 2</h2>
+          <select id="opp-team-select">
+            ${state.teams.map((t) => `<option value="${t.id}" ${t.id === d.oppTeamId ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}
+          </select>
+        </div>
+        <ul class="roster">${renderActiveRosterFor(d.oppTeamId, d.activeOppPlayerIds, 'opp')}</ul>`
+          : `<h2>Team 2</h2><p class="muted">Create a team on team tab.</p>`
       }
     </section>
 
@@ -882,30 +873,18 @@ function renderActiveRosterFor(teamId, activeIds, which) {
     .join('');
 }
 
-function renderRoster(players, which) {
+function renderRoster(players) {
   if (!players.length) return `<p class="muted">Add players</p>`;
-  if (which === 'te') {
-    return (
-      `<ul class="list">` +
-      players
-        .map(
-          (p, i) => `
-        <li class="listrow">
-          <span class="listmain">#${p.num} ${esc(p.name || '')}</span>
-          <button data-editbtn="${which}:${i}">Edit</button>
-          <button data-rm="${which}:${i}" class="danger">Delete</button>
-        </li>`,
-        )
-        .join('') +
-      `</ul>`
-    );
-  }
   return (
-    `<ul class="roster">` +
+    `<ul class="list">` +
     players
       .map(
-        (p, i) =>
-          `<li>#${p.num} ${esc(p.name || '')}<button data-rm="${which}:${i}" class="rm">×</button></li>`,
+        (p, i) => `
+        <li class="listrow">
+          <span class="listmain">#${p.num} ${esc(p.name || '')}</span>
+          <button data-editbtn="te:${i}">Edit</button>
+          <button data-rm="te:${i}" class="danger">Delete</button>
+        </li>`,
       )
       .join('') +
     `</ul>`
@@ -1033,35 +1012,14 @@ function wireSetup() {
         }
       }),
   );
-  $('opp-name') &&
-    ($('opp-name').oninput = (e) => {
-      d.oppName = e.target.value;
-      const match = findTeamByName(d.oppName);
-      const prev = d.oppTeamId;
-      if (match) {
-        if (d.oppTeamId !== match.id) {
-          d.oppTeamId = match.id;
-          d.activeOppPlayerIds = match.players.map((p) => p.id);
-        }
-      } else if (d.oppTeamId !== null) {
-        d.oppTeamId = null;
-        d.activeOppPlayerIds = [];
-        d.oppPlayers = [];
-      }
-      if (d.oppTeamId !== prev) {
-        renderSetup();
-        const inp = $('opp-name');
-        inp.focus();
-        inp.setSelectionRange(inp.value.length, inp.value.length);
-      }
-    });
-
-  $('opp-add-btn') &&
-    ($('opp-add-btn').onclick = () => addPlayer($('opp-add-num'), $('opp-add-name')));
-  $('opp-add-num') &&
-    ($('opp-add-num').onkeydown = (e) => {
-      if (e.key === 'Enter') $('opp-add-btn').click();
-    });
+  const oppSel = $('opp-team-select');
+  if (oppSel)
+    oppSel.onchange = () => {
+      d.oppTeamId = oppSel.value;
+      const t = state.teams.find((x) => x.id === oppSel.value);
+      d.activeOppPlayerIds = t ? t.players.map((p) => p.id) : [];
+      renderSetup();
+    };
 
   for (const len of ['half-len', 'num-halves', 'ot-len']) {
     const map = { 'half-len': 'halfLengthMin', 'num-halves': 'numHalves', 'ot-len': 'otLengthMin' };
@@ -1089,15 +1047,6 @@ function wireSetup() {
         renderSetup();
       }),
   );
-  el_each(
-    '[data-rm]',
-    (b) =>
-      (b.onclick = () => {
-        const [, i] = b.dataset.rm.split(':');
-        d.oppPlayers.splice(parseInt(i, 10), 1);
-        renderSetup();
-      }),
-  );
   // Home team gets initial possession; clock stays stopped until manually started.
   const sb = document.getElementById('btn-start-home');
   if (sb) sb.onclick = () => startGame(d.myTeamSide === 'home' ? 'my' : 'opp', false);
@@ -1105,14 +1054,6 @@ function wireSetup() {
 
 function el_each(sel, fn) {
   document.querySelectorAll(sel).forEach(fn);
-}
-
-function addPlayer(numEl, nameEl) {
-  const num = parseInt(numEl.value, 10);
-  if (isNaN(num)) return;
-  setupDraft.oppPlayers.push({ id: makeLocalId(), num, name: nameEl.value.trim() });
-  renderSetup();
-  document.getElementById('opp-add-num').focus();
 }
 
 function renderTeams() {
@@ -1170,7 +1111,7 @@ function renderTeamEditor(el) {
     <h1>Edit Team</h1>
     <section class="card">
       <label>Team name <input id="te-name" value="${esc(d.name)}"></label>
-      <div id="te-players">${renderRoster(d.players, 'te')}</div>
+      <div id="te-players">${renderRoster(d.players)}</div>
       <div class="add-player">
         <input id="te-add-num" type="number" inputmode="numeric" placeholder="#" class="num">
         <input id="te-add-name" placeholder="Name (optional)">
@@ -1299,28 +1240,21 @@ function startGame(tipWinner, startClock = true) {
     err.textContent = 'Select a team from the Teams tab first.';
     return;
   }
-  if (!d.oppName.trim()) {
-    err.textContent = "Enter Team 2's name.";
-    return;
-  }
   const activePlayers = myTeam.players.filter((p) => d.activePlayerIds.includes(p.id));
   if (!activePlayers.length) {
     err.textContent = 'Select at least one active player.';
     return;
   }
 
-  let oppTeamId, oppPlayers;
-  const oppSaved = d.oppTeamId ? state.teams.find((t) => t.id === d.oppTeamId) : null;
-  if (oppSaved) {
-    oppPlayers = oppSaved.players.filter((p) => d.activeOppPlayerIds.includes(p.id));
-    if (!oppPlayers.length) {
-      err.textContent = 'Select at least one active player for Team 2.';
-      return;
-    }
-    oppTeamId = oppSaved.id;
-  } else {
-    oppPlayers = d.oppPlayers;
-    oppTeamId = undefined;
+  const oppTeam = state.teams.find((t) => t.id === d.oppTeamId);
+  if (!oppTeam) {
+    err.textContent = 'Select a second team from the Teams tab first.';
+    return;
+  }
+  const activeOppPlayers = oppTeam.players.filter((p) => d.activeOppPlayerIds.includes(p.id));
+  if (!activeOppPlayers.length) {
+    err.textContent = 'Select at least one active player for Team 2.';
+    return;
   }
 
   let g = newGame({
@@ -1331,7 +1265,7 @@ function startGame(tipWinner, startClock = true) {
       myTeamSide: d.myTeamSide,
     },
     myTeam: { id: myTeam.id, name: myTeam.name, players: activePlayers },
-    oppTeam: { id: oppTeamId, name: d.oppName.trim(), players: oppPlayers },
+    oppTeam: { id: oppTeam.id, name: oppTeam.name, players: activeOppPlayers },
   });
   g.id = makeLocalId();
   g.date = Date.now();
