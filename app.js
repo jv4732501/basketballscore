@@ -2369,7 +2369,7 @@ function openHelpDialog() {
   dlg.className = 'dialog';
   const shareBtn =
     typeof navigator.share === 'function'
-      ? `<button class="dlgclose" id="help-share">Share / Add to Home Screen</button>`
+      ? `<button class="dlgclose" id="help-share">Share Link</button>`
       : '';
   dlg.innerHTML = `
     <h3>How to use Basketball Score</h3>
@@ -2397,7 +2397,10 @@ function openHelpDialog() {
         context than the one you're using).</li>
         <li>Export/Import backups from Setup if you need to clear your browser data without losing teams or history.</li>
       </ul>
-      <p>This app works best added to your Home Screen as a standalone app — no browser toolbar, and it checks for updates automatically.</p>
+      <p>This app works best added to your Home Screen as a standalone app — no browser toolbar, and
+      it checks for updates automatically. On iPhone, "Add to Home Screen" only appears in Safari's
+      own Share icon (the box with the up arrow, in the toolbar) — it doesn't show up in a share
+      sheet opened from a button on the page, including the Share Link button below.</p>
       ${shareBtn}
     </div>
     <button class="dlgclose" id="help-close">Close</button>
