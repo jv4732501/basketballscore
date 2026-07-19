@@ -794,6 +794,9 @@ function renderNav() {
     '[data-nav]',
     (b) =>
       (b.onclick = () => {
+        // Switching tabs away from an in-progress team edit silently discards it,
+        // same as tapping Cancel -- no separate save prompt.
+        if (teamEdit && b.dataset.nav !== 'teams') teamEdit = null;
         if (b.dataset.nav === 'game') {
           resumeGame();
           return;
@@ -1258,9 +1261,6 @@ function renderTeamEditor(el) {
         <button id="te-add-btn">Add</button>
       </div>
     </section>
-    <p class="muted">Nothing here is kept until you tap Save — including Starter toggles. Switching
-    tabs and coming back will still show these changes, but the rest of the app (like starting a
-    game) uses whatever was last saved, so tap Save before leaving.</p>
     <div class="tip-row">
       <button id="te-save" class="tip">Save</button>
       <button id="te-cancel">Cancel</button>
