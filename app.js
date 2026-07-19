@@ -1927,25 +1927,8 @@ function wireGame() {
     ($('clk-toggle').onclick = () => commit((game, now) => toggleClock(game, now)));
   el_each('[data-clk]', (b) => attachClockPress(b));
 
-  let missClickTimer = null;
-  $('btn-miss') &&
-    ($('btn-miss').onclick = () => {
-      if (missClickTimer) {
-        clearTimeout(missClickTimer);
-        missClickTimer = null;
-        missLock = !missLock;
-        missArm = false;
-        render();
-        return;
-      }
-      missClickTimer = setTimeout(() => {
-        missClickTimer = null;
-        if (!missLock) {
-          missArm = !missArm;
-          render();
-        }
-      }, 150);
-    });
+  const missBtn = $('btn-miss');
+  if (missBtn) attachMissPress(missBtn);
   $('btn-undo') &&
     ($('btn-undo').onclick = () => {
       flashKey = 'btn-undo';
@@ -2394,7 +2377,7 @@ function openHelpDialog() {
       <ul class="helplist">
         <li>Tap a player to select them, then tap a stat button (2PT, 3PT, REB, etc.) to record it.</li>
         <li>Long-press a player for Activity / Sub In-Out. Double-tap a player to rename or renumber them.</li>
-        <li>Tap MISS before recording a shot to mark just that one shot as a miss (it disarms automatically after). Double-tap MISS to lock it on — every shot records as a miss until you double-tap MISS again to unlock.</li>
+        <li>Tap MISS before recording a shot to mark just that one shot as a miss (it disarms automatically after). Long-press MISS to lock it on — every shot records as a miss until you long-press MISS again to unlock.</li>
         <li>Long-press a stat label (fouls, score) to see that stat's log.</li>
         <li>UNDO reverses the last action.</li>
         <li>Collapse a team's panel (below its Add button) to make the shared stat buttons bigger when you're only scoring one team.</li>
@@ -2506,6 +2489,45 @@ function attachClockPress(btn) {
       return;
     }
     commit((game, now) => adjustClock(game, dir, now));
+  };
+}
+
+// MISS button: quick tap arms/disarms just the next shot; long-press (500ms)
+// toggles the lock (every shot records as a miss until long-pressed again).
+function attachMissPress(btn) {
+  let timer = null,
+    longFired = false;
+  const start = () => {
+    longFired = false;
+    timer = setTimeout(() => {
+      longFired = true;
+      missLock = !missLock;
+      missArm = false;
+      render();
+    }, 500);
+  };
+  const end = () => {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+  };
+  btn.addEventListener('touchstart', start, { passive: true });
+  btn.addEventListener('touchend', end);
+  btn.addEventListener('touchcancel', end);
+  btn.addEventListener('mousedown', start);
+  btn.addEventListener('mouseup', end);
+  btn.addEventListener('mouseleave', end);
+  btn.addEventListener('contextmenu', (e) => e.preventDefault()); // suppress long-press browser menu
+  btn.onclick = () => {
+    if (longFired) {
+      longFired = false;
+      return;
+    }
+    if (!missLock) {
+      missArm = !missArm;
+      render();
+    }
   };
 }
 
