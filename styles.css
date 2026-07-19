@@ -547,9 +547,10 @@ html.screen-game body {
 }
 
 .badge {
-  padding: 1px 5px;
-  border-radius: 4px;
+  padding: 3px 8px;
+  border-radius: 5px;
   font-weight: 700;
+  font-size: 0.95rem;
 }
 
 .foulnum.bonus {

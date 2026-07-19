@@ -983,18 +983,23 @@ function renderActiveRosterFor(teamId, activeIds, which) {
 
 function renderRoster(players) {
   if (!players.length) return `<p class="muted">Add players</p>`;
+  // Render sorted by jersey number, but keep each row's data-* index pointing at
+  // the player's real position in the (unsorted) players array -- that's what the
+  // starter/edit/delete handlers index into.
+  const order = players.map((p, i) => i).sort((a, b) => players[a].num - players[b].num);
   return (
     `<ul class="list">` +
-    players
-      .map(
-        (p, i) => `
+    order
+      .map((i) => {
+        const p = players[i];
+        return `
         <li class="listrow">
           <span class="listmain">#${p.num} ${esc(p.name || '')}</span>
           <button data-starter="te:${i}" class="starterbtn${p.starter ? ' active' : ''}">Starter</button>
           <button data-editbtn="te:${i}">Edit</button>
           <button data-rm="te:${i}" class="danger">Delete</button>
-        </li>`,
-      )
+        </li>`;
+      })
       .join('') +
     `</ul>`
   );
