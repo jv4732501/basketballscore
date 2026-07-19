@@ -129,7 +129,7 @@ test('newGame omits oppTeam.id when not provided, includes it when provided', ()
   assert.strictEqual(withId.oppTeam.id, 'saved-team-1');
 });
 
-const { clockRemaining, startClock, stopClock, toggleClock, adjustClock } = app;
+const { clockRemaining, startClock, stopClock, toggleClock, adjustClock, updateGameSettings } = app;
 
 function freshGame() {
   return newGame({
@@ -138,6 +138,32 @@ function freshGame() {
     oppTeam: { name: 'Them', players: [{ id: 'o1', num: 9, name: '' }] },
   });
 }
+
+test('updateGameSettings applies new period/OT length and warning thresholds', () => {
+  const g = freshGame();
+  const updated = updateGameSettings(g, {
+    halfLengthMin: 20,
+    numHalves: 2,
+    otLengthMin: 5,
+    warnSecs: [45, 90],
+  });
+  assert.strictEqual(updated.config.halfLengthMin, 20);
+  assert.strictEqual(updated.config.otLengthMin, 5);
+  assert.deepStrictEqual(updated.config.warnSecs, [45, 90]);
+  assert.strictEqual(g.config.halfLengthMin, 18); // original untouched
+});
+
+test('updateGameSettings clamps numHalves so the current period is never reclassified', () => {
+  const g = freshGame();
+  g.period = 3; // already in OT relative to the original numHalves: 2
+  const updated = updateGameSettings(g, {
+    halfLengthMin: 18,
+    numHalves: 1,
+    otLengthMin: 4,
+    warnSecs: [60],
+  });
+  assert.strictEqual(updated.config.numHalves, 3); // clamped up to the current period
+});
 
 test('clockRemaining counts down by real elapsed time', () => {
   const clock = { remainingSec: 100, running: true, startedAt: 1000 };

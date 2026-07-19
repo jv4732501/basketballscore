@@ -109,6 +109,22 @@ function newGame({ config, myTeam, oppTeam }) {
   };
 }
 
+// Mid-game settings edit. numHalves is clamped to at least the current period so a
+// period already being played (or already an OT period) can't retroactively get
+// reclassified -- only later periods are affected, same as changing halfLengthMin/
+// otLengthMin mid-game only takes effect starting the next period transition.
+function updateGameSettings(game, settings) {
+  const g = clone(game);
+  g.config = {
+    ...g.config,
+    halfLengthMin: settings.halfLengthMin,
+    numHalves: Math.max(settings.numHalves, game.period),
+    otLengthMin: settings.otLengthMin,
+    warnSecs: settings.warnSecs,
+  };
+  return g;
+}
+
 function clockRemaining(clock, nowMs) {
   if (clock.running && clock.startedAt != null) {
     const elapsed = Math.floor((nowMs - clock.startedAt) / 1000);
@@ -687,6 +703,7 @@ if (typeof module !== 'undefined' && module.exports) {
     parseClock,
     fmtShot,
     newGame,
+    updateGameSettings,
     clockRemaining,
     startClock,
     stopClock,
@@ -847,6 +864,7 @@ let flashKey = null; // key of the grid button to flash blue on the next render,
 let lastPlayerClick = null; // { id, at } | null — double-click-to-edit detection for player buttons
 let historyViewId = null; // id of a history entry being viewed read-only via the Summary screen, or null
 let viewingLiveStats = false; // true while viewing the current in-progress game's read-only stats screen
+let gameSettingsDraft = null; // draft object while the mid-game Settings dialog is open, else null
 
 // --- Setup screen state (draft, lives only while on setup) ---
 let setupDraft = null;
@@ -2069,6 +2087,10 @@ function openStatMenu(anchorBtn, stat) {
 function openGameMenu(anchorBtn) {
   const items = [
     {
+      label: 'Game Settings',
+      act: openGameSettingsDialog,
+    },
+    {
       label: 'Swap Home and Away',
       act: () => commit((game, now) => swapHomeAway(game, now)),
     },
@@ -2381,9 +2403,10 @@ function openHelpDialog() {
         <li>Long-press a stat label (fouls, score) to see that stat's log.</li>
         <li>UNDO reverses the last action.</li>
         <li>Collapse a team's panel (below its Add button) to make the shared stat buttons bigger when you're only scoring one team.</li>
-        <li>Tap ☰ in the game screen's top toolbar for Swap Home and Away, View Stats (the current
-        box score without ending the game), and Sub in Starters (once any player is marked a
-        Starter on the Teams tab).</li>
+        <li>Tap ☰ in the game screen's top toolbar for Game Settings (change period length, number
+        of periods, OT length, and clock warning times mid-game — only affects periods that
+        haven't started yet), Swap Home and Away, View Stats (the current box score without ending
+        the game), and Sub in Starters (once any player is marked a Starter on the Teams tab).</li>
         <li>Mark players as Starters (green toggle, Teams tab), then use ☰ → Sub in Starters at the
         start of each period to bring them back on court.</li>
         <li>Set a per-period clock warning time in Setup → Settings — the clock turns orange once you're under it.</li>
@@ -2640,6 +2663,91 @@ function openImportTeamDialog() {
       closeActivityDialog();
       renderTeams();
     }
+  };
+}
+
+function openGameSettingsDialog() {
+  const c = state.game.config;
+  gameSettingsDraft = {
+    halfLengthMin: c.halfLengthMin,
+    numHalves: c.numHalves,
+    otLengthMin: c.otLengthMin,
+    warnSecs: [...c.warnSecs],
+  };
+  renderGameSettingsDialog();
+}
+
+function closeGameSettingsDialog() {
+  gameSettingsDraft = null;
+  closeActivityDialog();
+}
+
+function renderGameSettingsDialog() {
+  closeActivityDialog();
+  const d = gameSettingsDraft;
+  const minHalves = state.game.period;
+  const back = document.createElement('div');
+  back.className = 'dlgback';
+  back.addEventListener('pointerdown', closeGameSettingsDialog);
+  const dlg = document.createElement('div');
+  dlg.className = 'dialog';
+  dlg.innerHTML = `
+    <h3>Game Settings</h3>
+    <div class="dlgbody">
+      <p class="muted">Changes only affect periods that haven't started yet.</p>
+      <label>Period length (min) <input id="gs-half-len" type="number" value="${d.halfLengthMin}"></label>
+      <label>Number of periods <input id="gs-num-halves" type="number" min="${minHalves}" value="${d.numHalves}"></label>
+      <label>OT length (min) <input id="gs-ot-len" type="number" value="${d.otLengthMin}"></label>
+      <div id="gs-warn-secs-list">
+        ${d.warnSecs.map((s, i) => `<label>P${i + 1} warning (sec) <input type="number" data-gs-warn-idx="${i}" value="${s}"></label>`).join('')}
+      </div>
+      <p id="gs-error" class="error"></p>
+    </div>
+    <div class="tip-row">
+      <button id="gs-save" class="tip">Save</button>
+      <button id="gs-cancel">Cancel</button>
+    </div>
+  `;
+  document.body.appendChild(back);
+  document.body.appendChild(dlg);
+  document.getElementById('gs-cancel').onclick = closeGameSettingsDialog;
+  document.getElementById('gs-half-len').oninput = (e) => {
+    d.halfLengthMin = parseInt(e.target.value, 10) || d.halfLengthMin;
+  };
+  document.getElementById('gs-ot-len').oninput = (e) => {
+    d.otLengthMin = parseInt(e.target.value, 10) || d.otLengthMin;
+  };
+  document.getElementById('gs-num-halves').onchange = (e) => {
+    const n = parseInt(e.target.value, 10);
+    if (!n || n < minHalves) {
+      document.getElementById('gs-error').textContent =
+        `Number of periods can't be less than the current period (${minHalves}).`;
+      e.target.value = d.numHalves;
+      return;
+    }
+    d.numHalves = n;
+    d.warnSecs = defaultWarnSecs(n);
+    renderGameSettingsDialog();
+  };
+  el_each(
+    '[data-gs-warn-idx]',
+    (b) =>
+      (b.oninput = (e) => {
+        const i = parseInt(b.dataset.gsWarnIdx, 10);
+        d.warnSecs[i] = parseInt(e.target.value, 10) || d.warnSecs[i];
+      }),
+  );
+  document.getElementById('gs-save').onclick = () => {
+    if (!d.halfLengthMin || d.halfLengthMin < 1) {
+      document.getElementById('gs-error').textContent = 'Enter a period length.';
+      return;
+    }
+    if (!d.otLengthMin || d.otLengthMin < 1) {
+      document.getElementById('gs-error').textContent = 'Enter an OT length.';
+      return;
+    }
+    commit((game) => updateGameSettings(game, d));
+    closeGameSettingsDialog();
   };
 }
 

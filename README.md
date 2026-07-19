@@ -39,6 +39,8 @@ Commit the three files to a GitHub repo and enable GitHub Pages on the branch.
 - [ ] Clock: start/stop, SET, lock-screen catch-up, auto-stop at 0:00, timeout stops clock; digits turn orange under the per-period warning threshold set in Setup → Settings.
 - [ ] Possession toggle; undo; END PERIOD; +OT; END GAME.
 - [ ] "My team is Away": my team renders right, still gets detailed controls + saved correctly; screen side stays fixed for the whole game.
+- [ ] Game screen ☰ menu → Game Settings: change period length/count/OT length/warning times mid-game; already-played periods keep their old length, only later ones use the new value; Number of periods can't be set below the current period.
+- [ ] Game screen ☰ menu → View Stats: shows the current box score/log headed "Current Stats" (not "Final"); Back returns to the live game, not History.
 - [ ] Game screen ☰ menu → Swap Home and Away: label updates and it logs, but teams don't swap sides on screen.
 - [ ] Mark players as Starters (Teams tab, then Save) → game screen ☰ menu → Sub in Starters brings them on court; the menu item is hidden until at least one player is marked.
 - [ ] Collapse a team's panel on the game screen to make the shared stat buttons bigger.
