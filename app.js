@@ -2420,10 +2420,13 @@ function openHelpDialog() {
         context than the one you're using).</li>
         <li>Export/Import backups from Setup if you need to clear your browser data without losing teams or history.</li>
       </ul>
-      <p>This app works best added to your Home Screen as a standalone app — no browser toolbar, and
-      it checks for updates automatically. On iPhone, "Add to Home Screen" only appears in Safari's
-      own Share icon (the box with the up arrow, in the toolbar) — it doesn't show up in a share
-      sheet opened from a button on the page, including the Share Link button below.</p>
+      <p><strong>Add to your Home Screen (iPhone):</strong> tap the Share icon in Safari's own
+      toolbar (the square with an up arrow — not any button on this page), then scroll down and
+      tap "Add to Home Screen". Launch the app from that new icon instead of a bookmark — no
+      browser toolbar, and it checks for updates automatically.</p>
+      <p class="muted">Share Link below sends this app's URL to someone else (e.g. another coach) —
+      it can't trigger "Add to Home Screen" itself. iOS only allows that from Safari's own toolbar
+      icon, never from a share sheet opened by a button on the page.</p>
       ${shareBtn}
     </div>
     <button class="dlgclose" id="help-close">Close</button>
