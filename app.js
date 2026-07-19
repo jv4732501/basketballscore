@@ -1482,6 +1482,7 @@ function renderSummary(g, readOnly) {
       <span>${esc(teamName(g, leftTeam))} ${g.score[leftTeam]}</span> –
       <span>${g.score[rightTeam]} ${esc(teamName(g, rightTeam))}</span>
     </div>
+    <p class="muted">Home: ${esc(teamName(g, g.homeTeam))} · Away: ${esc(teamName(g, g.homeTeam === 'my' ? 'opp' : 'my'))}</p>
 
     <h2>Scoring by period</h2>
     <table class="bs"><thead><tr><th>Team</th>
@@ -1622,6 +1623,9 @@ function buildSummaryText(g, leftTeam, rightTeam, deltas) {
   lines.push('');
   lines.push(
     `FINAL: ${teamName(g, leftTeam)} ${g.score[leftTeam]} – ${g.score[rightTeam]} ${teamName(g, rightTeam)}`,
+  );
+  lines.push(
+    `Home: ${teamName(g, g.homeTeam)} · Away: ${teamName(g, g.homeTeam === 'my' ? 'opp' : 'my')}`,
   );
   lines.push('');
   lines.push('Scoring by period');
@@ -1940,7 +1944,7 @@ function wireGame() {
           missArm = !missArm;
           render();
         }
-      }, 300);
+      }, 150);
     });
   $('btn-undo') &&
     ($('btn-undo').onclick = () => {
