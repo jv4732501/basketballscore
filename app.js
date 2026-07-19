@@ -276,14 +276,6 @@ function hasAnyStarter(game) {
   return game.myTeam.players.some((p) => p.starter) || game.oppTeam.players.some((p) => p.starter);
 }
 
-function isFreshPeriodStart(game) {
-  if (game.clock.running) return false;
-  const fullSec =
-    (game.period <= game.config.numHalves ? game.config.halfLengthMin : game.config.otLengthMin) *
-    60;
-  return game.clock.remainingSec === fullSec;
-}
-
 function resetToStarters(game, nowMs) {
   let g = game;
   for (const team of ['my', 'opp']) {
@@ -730,7 +722,6 @@ if (typeof module !== 'undefined' && module.exports) {
     subIn,
     subOut,
     hasAnyStarter,
-    isFreshPeriodStart,
     resetToStarters,
     fmtMinutes,
     playerEff,
@@ -747,7 +738,6 @@ const KEYS = {
 };
 let state = { teams: [], game: null, theme: 'dark', history: [] };
 let homeView = 'setup';
-let peekingHome = false; // true while viewing Setup/Teams/History with a game still active in the background
 
 function saveTeams() {
   localStorage.setItem(KEYS.teams, serialize(state.teams));
@@ -780,9 +770,11 @@ function showOnly(...visible) {
 }
 
 function renderNav() {
-  const tabs = [['setup', 'New Game']];
-  if (isResumable(state.game)) tabs.push(['game', 'Current Game']);
-  tabs.push(['teams', 'Teams'], ['history', 'History']);
+  const tabs = [
+    ['setup', 'New Game'],
+    ['teams', 'Teams'],
+    ['history', 'History'],
+  ];
   document.getElementById('nav').innerHTML =
     tabs
       .map(
@@ -797,10 +789,6 @@ function renderNav() {
         // Switching tabs away from an in-progress team edit silently discards it,
         // same as tapping Cancel -- no separate save prompt.
         if (teamEdit && b.dataset.nav !== 'teams') teamEdit = null;
-        if (b.dataset.nav === 'game') {
-          resumeGame();
-          return;
-        }
         homeView = b.dataset.nav;
         render();
       }),
@@ -811,7 +799,7 @@ function renderNav() {
 function render() {
   stopTick(); // Clear any running interval before routing; renderGame() re-starts it.
   const g = state.game;
-  if (g && g.screen === 'game' && !peekingHome) {
+  if (g && g.screen === 'game') {
     showOnly('game');
     renderGame();
     return;
@@ -852,7 +840,6 @@ let missArm = false; // when true, the next shot tap records a miss, then disarm
 let missLock = false; // when true, MISS stays armed across shots until double-clicked off
 let flashKey = null; // key of the grid button to flash blue on the next render, or null
 let lastPlayerClick = null; // { id, at } | null — double-click-to-edit detection for player buttons
-let lastSwapClickAt = 0; // last tap time on either H/A badge — manual double-tap detection for the swap action
 let historyViewId = null; // id of a history entry being viewed read-only via the Summary screen, or null
 
 // --- Setup screen state (draft, lives only while on setup) ---
@@ -1397,7 +1384,6 @@ async function openHistoryGame(id) {
     if (!ok) return;
   }
   state.game = reopenGame(entry);
-  peekingHome = false;
   addOpen = null;
   collapsedTeam = null;
   lastPlayerClick = null;
@@ -1444,7 +1430,6 @@ function startGame(tipWinner, startClock = true) {
   g = setPossession(g, tipWinner);
   if (startClock) g = toggleClock(g, Date.now()); // tip-off starts the clock (Start button leaves it stopped)
   state.game = g;
-  peekingHome = false;
   setupDraft = null;
   addOpen = null;
   collapsedTeam = null;
@@ -1456,18 +1441,8 @@ function startGame(tipWinner, startClock = true) {
 }
 
 function resumeGame() {
-  peekingHome = false;
   render();
 } // state.game already screen:'game'
-
-// Leave the full-screen game view for Setup/Teams/History without ending the
-// game -- it keeps running in the background; the "Current Game" nav tab (or
-// the resume banner on Setup) is how you get back to it.
-function peekHomeFromGame() {
-  peekingHome = true;
-  homeView = 'setup';
-  render();
-}
 async function discardGame() {
   const ok = await themedConfirm('Discard the in-progress game? This cannot be undone.', {
     okLabel: 'Discard',
@@ -1475,7 +1450,6 @@ async function discardGame() {
   });
   if (!ok) return;
   state.game = null;
-  peekingHome = false;
   saveGame();
   setupDraft = defaultDraft();
   render();
@@ -1720,13 +1694,12 @@ function renderGame() {
   const myLeft = g.config.myTeamSide === 'home';
   const leftTeam = myLeft ? 'my' : 'opp';
   const rightTeam = myLeft ? 'opp' : 'my';
-  const sideBadge = (team) =>
-    `<button class="badge side" data-swap-sides title="Double-tap to swap Home/Away">${g.homeTeam === team ? 'H' : 'A'}</button>`;
+  const sideBadge = (team) => `<span class="badge side">${g.homeTeam === team ? 'H' : 'A'}</span>`;
   const clockRem = clockRemaining(g.clock, Date.now());
   const clockWarn = clockRem < warnSecsFor(g.config, g.period);
 
   el.innerHTML = `
-    <div class="gametoolbar"><button id="btn-game-home">Home</button></div>
+    <div class="gametoolbar"><button id="btn-game-menu" title="Menu">☰</button></div>
     <header class="gh">
       <div class="tn">${sideBadge(leftTeam)} ${esc(teamName(g, leftTeam))}</div>
       <div class="clockrow">
@@ -1854,7 +1827,7 @@ function selectedTeam(g) {
 function wireGame() {
   const $ = (id) => document.getElementById(id);
 
-  $('btn-game-home').onclick = peekHomeFromGame;
+  $('btn-game-menu').onclick = () => openGameMenu($('btn-game-menu'));
 
   el_each('[data-pl]', (b) => attachPlayerPress(b));
   el_each('[data-actlog]', (b) => attachStatPress(b));
@@ -1936,31 +1909,8 @@ function wireGame() {
   });
 
   $('poss') && ($('poss').onclick = () => commit((game, now) => togglePossession(game, now)));
-  el_each(
-    '[data-swap-sides]',
-    (b) =>
-      (b.onclick = () => {
-        // Native dblclick doesn't fire reliably from touch taps on iOS Safari, so
-        // detect the double-tap manually (same pattern as lastPlayerClick).
-        const now = Date.now();
-        if (now - lastSwapClickAt < 300) {
-          lastSwapClickAt = 0;
-          commit((game, nowMs) => swapHomeAway(game, nowMs));
-        } else {
-          lastSwapClickAt = now;
-        }
-      }),
-  );
   $('clk-toggle') &&
-    ($('clk-toggle').onclick = async () => {
-      const g = state.game;
-      const doReset =
-        isFreshPeriodStart(g) && hasAnyStarter(g) && (await themedConfirm('Sub in starters?'));
-      commit((game, now) => {
-        const ng = doReset ? resetToStarters(game, now) : game;
-        return toggleClock(ng, now);
-      });
-    });
+    ($('clk-toggle').onclick = () => commit((game, now) => toggleClock(game, now)));
   el_each('[data-clk]', (b) => attachClockPress(b));
 
   let missClickTimer = null;
@@ -2116,6 +2066,24 @@ function openStatMenu(anchorBtn, stat) {
     label: m,
     act: () => recordSelectedStat(stat, { made: true, modifier: m }),
   }));
+  openPopover(anchorBtn, items);
+}
+
+function openGameMenu(anchorBtn) {
+  const items = [
+    {
+      label: 'Swap Home and Away',
+      act: () => commit((game, now) => swapHomeAway(game, now)),
+    },
+  ];
+  // Sub in Starters subs everyone without the flag OUT, so it's only offered once
+  // at least one player is actually marked -- otherwise it would empty the court.
+  if (hasAnyStarter(state.game)) {
+    items.push({
+      label: 'Sub in Starters',
+      act: () => commit((game, now) => resetToStarters(game, now)),
+    });
+  }
   openPopover(anchorBtn, items);
 }
 
@@ -2408,10 +2376,10 @@ function openHelpDialog() {
         <li>Long-press a stat label (fouls, score) to see that stat's log.</li>
         <li>UNDO reverses the last action.</li>
         <li>Collapse a team's panel (below its Add button) to make the shared stat buttons bigger when you're only scoring one team.</li>
-        <li>Double-tap either H/A badge to swap Home/Away.</li>
-        <li>Tap Home in the game screen's top toolbar to check Setup/Teams/History without ending the
-        game — it keeps running in the background. A "Current Game" tab appears to jump back in.</li>
-        <li>Mark players as Starters (green toggle, Teams tab) — at the start of each period you'll be asked to sub your starters in.</li>
+        <li>Tap ☰ in the game screen's top toolbar for Swap Home and Away, and Sub in Starters (once
+        any player is marked a Starter on the Teams tab).</li>
+        <li>Mark players as Starters (green toggle, Teams tab), then use ☰ → Sub in Starters at the
+        start of each period to bring them back on court.</li>
         <li>Set a per-period clock warning time in Setup → Settings — the clock turns orange once you're under it.</li>
         <li>Fouls turn orange at the bonus and red at the double bonus.</li>
         <li>Tap Review on a History row to see that game's box score again, with Print and Share available there too.</li>

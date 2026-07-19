@@ -382,8 +382,9 @@ html.screen-game body {
 }
 
 .gametoolbar button {
-  padding: 5px 12px;
-  font-size: 0.85rem;
+  padding: 4px 10px;
+  font-size: 1.1rem;
+  line-height: 1;
   border: 1px solid var(--border);
   background: var(--btn-bg);
   color: var(--btn-text);
@@ -580,9 +581,6 @@ html.screen-game body {
 .badge.side {
   background: rgba(255, 255, 255, 0.18);
   color: #fff;
-  border: none;
-  font-family: inherit;
-  cursor: pointer;
 }
 
 .court {

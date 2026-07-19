@@ -617,7 +617,7 @@ test('fmtMinutes formats seconds to one-decimal minutes', () => {
   assert.strictEqual(fmtMinutes(undefined), '0.0');
 });
 
-const { hasAnyStarter, isFreshPeriodStart, resetToStarters } = app;
+const { hasAnyStarter, resetToStarters } = app;
 
 test('newGame carries the starter flag onto game players without auto-subbing them in', () => {
   const g = newGame({
@@ -639,24 +639,6 @@ test('hasAnyStarter detects a starter on either team', () => {
   assert.strictEqual(hasAnyStarter(g), false);
   g.myTeam.players[0].starter = true;
   assert.strictEqual(hasAnyStarter(g), true);
-});
-
-test('isFreshPeriodStart is true only when the clock is stopped at the full period length', () => {
-  let g = freshGame(); // stopped, remaining = 18*60 (period 1)
-  assert.strictEqual(isFreshPeriodStart(g), true);
-  g = startClock(g, 1000);
-  assert.strictEqual(isFreshPeriodStart(g), false); // running
-  g = stopClock(g, 6000); // 5s elapsed, stopped
-  assert.strictEqual(isFreshPeriodStart(g), false); // partial time
-});
-
-test('isFreshPeriodStart uses the OT length once past regulation periods', () => {
-  let g = freshGame();
-  g.period = 3; // OT (numHalves = 2)
-  g.clock = { remainingSec: 4 * 60, running: false, startedAt: null };
-  assert.strictEqual(isFreshPeriodStart(g), true);
-  g.clock.remainingSec = 18 * 60; // wrong length for OT
-  assert.strictEqual(isFreshPeriodStart(g), false);
 });
 
 test('resetToStarters subs in starters and subs out everyone else', () => {
