@@ -747,6 +747,7 @@ const KEYS = {
 };
 let state = { teams: [], game: null, theme: 'dark', history: [] };
 let homeView = 'setup';
+let peekingHome = false; // true while viewing Setup/Teams/History with a game still active in the background
 
 function saveTeams() {
   localStorage.setItem(KEYS.teams, serialize(state.teams));
@@ -779,11 +780,9 @@ function showOnly(...visible) {
 }
 
 function renderNav() {
-  const tabs = [
-    ['setup', 'New Game'],
-    ['teams', 'Teams'],
-    ['history', 'History'],
-  ];
+  const tabs = [['setup', 'New Game']];
+  if (isResumable(state.game)) tabs.push(['game', 'Current Game']);
+  tabs.push(['teams', 'Teams'], ['history', 'History']);
   document.getElementById('nav').innerHTML =
     tabs
       .map(
@@ -795,6 +794,10 @@ function renderNav() {
     '[data-nav]',
     (b) =>
       (b.onclick = () => {
+        if (b.dataset.nav === 'game') {
+          resumeGame();
+          return;
+        }
         homeView = b.dataset.nav;
         render();
       }),
@@ -805,7 +808,7 @@ function renderNav() {
 function render() {
   stopTick(); // Clear any running interval before routing; renderGame() re-starts it.
   const g = state.game;
-  if (g && g.screen === 'game') {
+  if (g && g.screen === 'game' && !peekingHome) {
     showOnly('game');
     renderGame();
     return;
@@ -1394,6 +1397,7 @@ async function openHistoryGame(id) {
     if (!ok) return;
   }
   state.game = reopenGame(entry);
+  peekingHome = false;
   addOpen = null;
   collapsedTeam = null;
   lastPlayerClick = null;
@@ -1440,6 +1444,7 @@ function startGame(tipWinner, startClock = true) {
   g = setPossession(g, tipWinner);
   if (startClock) g = toggleClock(g, Date.now()); // tip-off starts the clock (Start button leaves it stopped)
   state.game = g;
+  peekingHome = false;
   setupDraft = null;
   addOpen = null;
   collapsedTeam = null;
@@ -1451,8 +1456,18 @@ function startGame(tipWinner, startClock = true) {
 }
 
 function resumeGame() {
+  peekingHome = false;
   render();
 } // state.game already screen:'game'
+
+// Leave the full-screen game view for Setup/Teams/History without ending the
+// game -- it keeps running in the background; the "Current Game" nav tab (or
+// the resume banner on Setup) is how you get back to it.
+function peekHomeFromGame() {
+  peekingHome = true;
+  homeView = 'setup';
+  render();
+}
 async function discardGame() {
   const ok = await themedConfirm('Discard the in-progress game? This cannot be undone.', {
     okLabel: 'Discard',
@@ -1460,6 +1475,7 @@ async function discardGame() {
   });
   if (!ok) return;
   state.game = null;
+  peekingHome = false;
   saveGame();
   setupDraft = defaultDraft();
   render();
@@ -1710,6 +1726,7 @@ function renderGame() {
   const clockWarn = clockRem < warnSecsFor(g.config, g.period);
 
   el.innerHTML = `
+    <div class="gametoolbar"><button id="btn-game-home">Home</button></div>
     <header class="gh">
       <div class="tn">${sideBadge(leftTeam)} ${esc(teamName(g, leftTeam))}</div>
       <div class="clockrow">
@@ -1836,6 +1853,8 @@ function selectedTeam(g) {
 
 function wireGame() {
   const $ = (id) => document.getElementById(id);
+
+  $('btn-game-home').onclick = peekHomeFromGame;
 
   el_each('[data-pl]', (b) => attachPlayerPress(b));
   el_each('[data-actlog]', (b) => attachStatPress(b));
@@ -2390,6 +2409,8 @@ function openHelpDialog() {
         <li>UNDO reverses the last action.</li>
         <li>Collapse a team's panel (below its Add button) to make the shared stat buttons bigger when you're only scoring one team.</li>
         <li>Double-tap either H/A badge to swap Home/Away.</li>
+        <li>Tap Home in the game screen's top toolbar to check Setup/Teams/History without ending the
+        game — it keeps running in the background. A "Current Game" tab appears to jump back in.</li>
         <li>Mark players as Starters (green toggle, Teams tab) — at the start of each period you'll be asked to sub your starters in.</li>
         <li>Set a per-period clock warning time in Setup → Settings — the clock turns orange once you're under it.</li>
         <li>Fouls turn orange at the bonus and red at the double bonus.</li>

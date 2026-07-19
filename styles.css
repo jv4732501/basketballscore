@@ -374,6 +374,22 @@ html.screen-game body {
   height: 100dvh;
 }
 
+.gametoolbar {
+  display: flex;
+  padding: 4px 8px;
+  background: #111;
+  border-bottom: 1px solid var(--border);
+}
+
+.gametoolbar button {
+  padding: 5px 12px;
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border-radius: 6px;
+}
+
 .gh {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
