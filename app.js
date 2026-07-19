@@ -800,6 +800,11 @@ function render() {
   stopTick(); // Clear any running interval before routing; renderGame() re-starts it.
   const g = state.game;
   if (g && g.screen === 'game') {
+    if (viewingLiveStats) {
+      showOnly('summary');
+      renderSummary(g, true);
+      return;
+    }
     showOnly('game');
     renderGame();
     return;
@@ -841,6 +846,7 @@ let missLock = false; // when true, MISS stays armed across shots until double-c
 let flashKey = null; // key of the grid button to flash blue on the next render, or null
 let lastPlayerClick = null; // { id, at } | null — double-click-to-edit detection for player buttons
 let historyViewId = null; // id of a history entry being viewed read-only via the Summary screen, or null
+let viewingLiveStats = false; // true while viewing the current in-progress game's read-only stats screen
 
 // --- Setup screen state (draft, lives only while on setup) ---
 let setupDraft = null;
@@ -1471,7 +1477,7 @@ function renderSummary(g, readOnly) {
       <button id="sum-share" ${typeof navigator.share === 'function' ? '' : 'hidden'}>Share</button>
       ${readOnly ? `<button id="sum-back">Back</button>` : `<button id="sum-new">Home</button>`}
     </div>
-    <h1>Final</h1>
+    <h1>${g.screen === 'game' ? 'Current Stats' : 'Final'}</h1>
     <div class="final">
       <span>${esc(teamName(g, leftTeam))} ${g.score[leftTeam]}</span> –
       <span>${g.score[rightTeam]} ${esc(teamName(g, rightTeam))}</span>
@@ -1509,8 +1515,12 @@ function renderSummary(g, readOnly) {
     };
   if (readOnly) {
     document.getElementById('sum-back').onclick = () => {
-      historyViewId = null;
-      homeView = 'history';
+      if (viewingLiveStats) {
+        viewingLiveStats = false;
+      } else {
+        historyViewId = null;
+        homeView = 'history';
+      }
       render();
     };
   } else {
@@ -2075,6 +2085,13 @@ function openGameMenu(anchorBtn) {
       label: 'Swap Home and Away',
       act: () => commit((game, now) => swapHomeAway(game, now)),
     },
+    {
+      label: 'View Stats',
+      act: () => {
+        viewingLiveStats = true;
+        render();
+      },
+    },
   ];
   // Sub in Starters subs everyone without the flag OUT, so it's only offered once
   // at least one player is actually marked -- otherwise it would empty the court.
@@ -2084,6 +2101,7 @@ function openGameMenu(anchorBtn) {
       act: () => commit((game, now) => resetToStarters(game, now)),
     });
   }
+  items.sort((a, b) => a.label.localeCompare(b.label));
   openPopover(anchorBtn, items);
 }
 
@@ -2376,8 +2394,9 @@ function openHelpDialog() {
         <li>Long-press a stat label (fouls, score) to see that stat's log.</li>
         <li>UNDO reverses the last action.</li>
         <li>Collapse a team's panel (below its Add button) to make the shared stat buttons bigger when you're only scoring one team.</li>
-        <li>Tap ☰ in the game screen's top toolbar for Swap Home and Away, and Sub in Starters (once
-        any player is marked a Starter on the Teams tab).</li>
+        <li>Tap ☰ in the game screen's top toolbar for Swap Home and Away, View Stats (the current
+        box score without ending the game), and Sub in Starters (once any player is marked a
+        Starter on the Teams tab).</li>
         <li>Mark players as Starters (green toggle, Teams tab), then use ☰ → Sub in Starters at the
         start of each period to bring them back on court.</li>
         <li>Set a per-period clock warning time in Setup → Settings — the clock turns orange once you're under it.</li>
