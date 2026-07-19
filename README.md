@@ -32,8 +32,8 @@ Commit the three files to a GitHub repo and enable GitHub Pages on the branch.
 - [ ] Clock: start/stop, SET, lock-screen catch-up, auto-stop at 0:00, timeout stops clock; digits turn orange under the per-period warning threshold set in Setup → Settings.
 - [ ] Possession toggle; undo; END PERIOD; +OT; END GAME.
 - [ ] "My team is Away": my team renders right, still gets detailed controls + saved correctly; screen side stays fixed for the whole game.
-- [ ] Double-tap either H/A badge: label updates and it logs, but teams don't swap sides on screen.
-- [ ] Mark players as Starters (Teams tab) → "Sub in starters?" prompt appears at the start of each period, including game start.
+- [ ] Game screen ☰ menu → Swap Home and Away: label updates and it logs, but teams don't swap sides on screen.
+- [ ] Mark players as Starters (Teams tab, then Save) → game screen ☰ menu → Sub in Starters brings them on court; the menu item is hidden until at least one player is marked.
 - [ ] Collapse a team's panel on the game screen to make the shared stat buttons bigger.
 - [ ] Summary: final score, period table, box scores, log; Print shows only summary; Home resets.
 - [ ] Reload mid-game → resume banner → Resume restores exact state; Discard clears it.
